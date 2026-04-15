@@ -97,6 +97,9 @@ async fn main() {
                 ArtistCommands::Similar { uuid, pagination } => {
                     commands::artist::similar(&client, uuid, pagination, &format).await
                 }
+                ArtistCommands::Identifiers { uuid } => {
+                    commands::artist::identifiers(&client, uuid, &format).await
+                }
             }
         }
         Commands::Song { command } => {
@@ -118,6 +121,9 @@ async fn main() {
                     platform,
                     pagination,
                 } => commands::song::charts(&client, uuid, platform, pagination, &format).await,
+                SongCommands::Identifiers { uuid } => {
+                    commands::song::identifiers(&client, uuid, &format).await
+                }
             }
         }
         Commands::Album { command } => {

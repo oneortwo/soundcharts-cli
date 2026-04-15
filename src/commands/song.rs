@@ -180,3 +180,51 @@ pub async fn charts(
         OutputFormat::Table => output::print_table(headers, rows),
     }
 }
+
+pub async fn identifiers(client: &SoundchartsClient, uuid: &str, format: &OutputFormat) {
+    let path = format!("/api/v2/song/{uuid}/identifiers");
+    let response = client.get(&path, &[]).await;
+
+    let items = response
+        .body
+        .get("items")
+        .and_then(|i| i.as_array())
+        .cloned()
+        .unwrap_or_default();
+
+    if items.is_empty() {
+        eprintln!("No identifiers found.");
+        return;
+    }
+
+    let rows: Vec<Vec<String>> = items
+        .iter()
+        .map(|item| {
+            vec![
+                item.get("platformName")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                item.get("platformCode")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                item.get("identifier")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                item.get("url")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+            ]
+        })
+        .collect();
+
+    let headers = &["Platform", "Code", "ID", "URL"];
+    match format {
+        OutputFormat::Json => output::print_json_array(&items),
+        OutputFormat::Csv => output::print_csv(headers, rows),
+        OutputFormat::Table => output::print_table(headers, rows),
+    }
+}

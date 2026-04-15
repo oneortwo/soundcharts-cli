@@ -181,6 +181,11 @@ pub enum ArtistCommands {
         #[command(flatten)]
         pagination: PaginationArgs,
     },
+    /// Get platform identifiers (Spotify, YouTube, Apple Music, etc.)
+    Identifiers {
+        /// Artist UUID
+        uuid: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -217,6 +222,11 @@ pub enum SongCommands {
         platform: String,
         #[command(flatten)]
         pagination: PaginationArgs,
+    },
+    /// Get platform identifiers (Spotify, YouTube, Apple Music, etc.)
+    Identifiers {
+        /// Song UUID
+        uuid: String,
     },
 }
 
