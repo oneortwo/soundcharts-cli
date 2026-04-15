@@ -56,28 +56,56 @@ fn is_upc(s: &str) -> bool {
 }
 
 fn parse_platform_url(url: &str) -> Result<Identifier, String> {
-    let platform = if url.contains("spotify.com") {
-        "spotify"
+    // Strip query params and trailing slashes for ID extraction
+    let clean = url.split('?').next().unwrap_or(url).trim_end_matches('/');
+
+    let (platform, id) = if url.contains("spotify.com") {
+        // https://open.spotify.com/artist/ID or /track/ID or /album/ID
+        let id = extract_last_path_segment(clean);
+        ("spotify", id)
     } else if url.contains("music.apple.com") {
-        "apple-music"
-    } else if url.contains("youtube.com") || url.contains("youtu.be") {
-        "youtube"
+        // https://music.apple.com/us/artist/name/ID
+        let id = extract_last_path_segment(clean);
+        ("apple-music", id)
+    } else if url.contains("youtube.com") {
+        // https://www.youtube.com/watch?v=ID or /channel/ID
+        if let Some(v) = url.split("v=").nth(1) {
+            ("youtube", v.split('&').next().unwrap_or(v).to_string())
+        } else {
+            ("youtube", extract_last_path_segment(clean))
+        }
+    } else if url.contains("youtu.be") {
+        // https://youtu.be/ID
+        ("youtube", extract_last_path_segment(clean))
     } else if url.contains("deezer.com") {
-        "deezer"
+        // https://www.deezer.com/track/ID or /artist/ID
+        ("deezer", extract_last_path_segment(clean))
     } else if url.contains("soundcloud.com") {
-        "soundcloud"
+        ("soundcloud", extract_last_path_segment(clean))
     } else if url.contains("tidal.com") {
-        "tidal"
+        // https://tidal.com/browse/track/ID or /artist/ID
+        ("tidal", extract_last_path_segment(clean))
     } else if url.contains("music.amazon") {
-        "amazon"
+        ("amazon", extract_last_path_segment(clean))
     } else {
         return Err(format!("Unrecognized platform URL: {url}"));
     };
 
+    if id.is_empty() {
+        return Err(format!("Could not extract platform ID from URL: {url}"));
+    }
+
     Ok(Identifier::PlatformUrl {
         platform: platform.to_string(),
-        id: url.to_string(),
+        id,
     })
+}
+
+fn extract_last_path_segment(url: &str) -> String {
+    url.rsplit('/')
+        .next()
+        .unwrap_or("")
+        .to_string()
 }
 
 #[cfg(test)]
@@ -112,7 +140,23 @@ mod tests {
     fn test_detect_spotify_url() {
         let result = detect("https://open.spotify.com/artist/3TVXtAsR1Inumwj472S9r4");
         match result.unwrap() {
-            Identifier::PlatformUrl { platform, .. } => assert_eq!(platform, "spotify"),
+            Identifier::PlatformUrl { platform, id } => {
+                assert_eq!(platform, "spotify");
+                assert_eq!(id, "3TVXtAsR1Inumwj472S9r4");
+            }
+            other => panic!("Expected PlatformUrl, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_detect_spotify_url_with_query_params() {
+        let result =
+            detect("https://open.spotify.com/artist/2Lhs0asnFQiLuntn3s8p78?si=PTy9B7mvQWO");
+        match result.unwrap() {
+            Identifier::PlatformUrl { platform, id } => {
+                assert_eq!(platform, "spotify");
+                assert_eq!(id, "2Lhs0asnFQiLuntn3s8p78");
+            }
             other => panic!("Expected PlatformUrl, got {:?}", other),
         }
     }
