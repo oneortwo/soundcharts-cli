@@ -1,3 +1,9 @@
+mod cli;
+
+use clap::Parser;
+use cli::Cli;
+
 fn main() {
-    println!("sc - Soundcharts CLI");
+    let _cli = Cli::parse();
+    println!("Parsed CLI successfully");
 }
