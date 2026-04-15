@@ -9,17 +9,17 @@ An unofficial command-line interface for the [Soundcharts API](https://developer
 ### From source
 
 ```bash
-cargo install --git https://github.com/oneortwo/cli-soundcharts
+cargo install --git https://github.com/oneortwo/soundcharts-cli
 ```
 
 ### Prebuilt binaries
 
-Download from [GitHub Releases](https://github.com/oneortwo/cli-soundcharts/releases).
+Download from [GitHub Releases](https://github.com/oneortwo/soundcharts-cli/releases).
 
 ### Install script
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/oneortwo/cli-soundcharts/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/oneortwo/soundcharts-cli/main/install.sh | sh
 ```
 
 ## Quick Start
@@ -103,8 +103,8 @@ Credential precedence (highest to lowest):
 ## Building from source
 
 ```bash
-git clone https://github.com/oneortwo/cli-soundcharts
-cd cli-soundcharts
+git clone https://github.com/oneortwo/soundcharts-cli
+cd soundcharts-cli
 cargo build --release
 # Binary at target/release/sc
 ```

@@ -1,9 +1,9 @@
 [package]
-name = "cli-soundcharts"
+name = "soundcharts-cli"
 version = "0.0.0"
 edition = "2021"
 description = "CLI for the Soundcharts API"
-repository = "https://github.com/oneortwo/cli-soundcharts"
+repository = "https://github.com/oneortwo/soundcharts-cli"
 license = "MIT"
 
 [[bin]]

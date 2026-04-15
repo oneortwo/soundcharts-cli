@@ -4,7 +4,7 @@ pub fn run() {
 
     let result = self_update::backends::github::Update::configure()
         .repo_owner("oneortwo")
-        .repo_name("cli-soundcharts")
+        .repo_name("soundcharts-cli")
         .bin_name("sc")
         .current_version(current)
         .show_download_progress(true)

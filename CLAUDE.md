@@ -1,4 +1,4 @@
-# cli-soundcharts
+# soundcharts-cli
 
 Rust CLI for the Soundcharts API. Binary name: `sc`.
 
