@@ -6,6 +6,14 @@ use crate::models::song::Song;
 use crate::output;
 use crate::paginator;
 
+const SEARCH_MAX_PAGE_SIZE: usize = 20;
+
+fn search_pagination(args: &PaginationArgs) -> PaginationArgs {
+    let mut p = args.clone();
+    p.page_size = p.page_size.min(SEARCH_MAX_PAGE_SIZE);
+    p
+}
+
 pub async fn artist(
     client: &SoundchartsClient,
     query: &str,
@@ -13,7 +21,7 @@ pub async fn artist(
     json_mode: bool,
 ) {
     let path = format!("/api/v2/artist/search/{}", urlencoding::encode(query));
-    let result = paginator::paginate(client, &path, &[], pagination).await;
+    let result = paginator::paginate(client, &path, &[], &search_pagination(pagination)).await;
 
     if json_mode {
         output::print_json_array(&result.items);
@@ -41,7 +49,7 @@ pub async fn song(
     json_mode: bool,
 ) {
     let path = format!("/api/v2/song/search/{}", urlencoding::encode(query));
-    let result = paginator::paginate(client, &path, &[], pagination).await;
+    let result = paginator::paginate(client, &path, &[], &search_pagination(pagination)).await;
 
     if json_mode {
         output::print_json_array(&result.items);
@@ -69,7 +77,7 @@ pub async fn playlist(
     json_mode: bool,
 ) {
     let path = format!("/api/v2/playlist/search/{}", urlencoding::encode(query));
-    let result = paginator::paginate(client, &path, &[], pagination).await;
+    let result = paginator::paginate(client, &path, &[], &search_pagination(pagination)).await;
 
     if json_mode {
         output::print_json_array(&result.items);

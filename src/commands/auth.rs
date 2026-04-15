@@ -35,7 +35,7 @@ pub async fn setup(no_input: bool) {
 
     let client = SoundchartsClient::new(&app_id, &api_key);
     let response = client
-        .get("/api/v2/artist/search/test", &[("limit", "1")])
+        .get("/api/v2/artist/search/billie%20eilish", &[("limit", "1")])
         .await;
 
     if let Some(quota) = response.quota_remaining {
@@ -81,7 +81,7 @@ pub async fn status(flag_app_id: Option<&str>, flag_api_key: Option<&str>) {
 
     let client = SoundchartsClient::new(&creds.app_id, &creds.api_key);
     let response = client
-        .get("/api/v2/artist/search/test", &[("limit", "1")])
+        .get("/api/v2/artist/search/billie%20eilish", &[("limit", "1")])
         .await;
 
     if let Some(quota) = response.quota_remaining {

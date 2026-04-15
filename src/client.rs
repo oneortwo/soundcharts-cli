@@ -59,7 +59,7 @@ impl SoundchartsClient {
 
         let status = response.status();
 
-        if status == reqwest::StatusCode::UNAUTHORIZED || status == reqwest::StatusCode::FORBIDDEN {
+        if status == reqwest::StatusCode::UNAUTHORIZED {
             eprintln!("error: Invalid credentials. Run 'sc auth setup' to configure.");
             process::exit(2);
         }
@@ -97,6 +97,10 @@ impl SoundchartsClient {
                 if code == 404 {
                     eprintln!("error: Resource not found.");
                     process::exit(3);
+                }
+                if code == 403 {
+                    eprintln!("error: Forbidden: {msg}");
+                    process::exit(1);
                 }
                 eprintln!("error: API error: {msg}");
                 process::exit(1);

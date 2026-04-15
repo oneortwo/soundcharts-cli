@@ -40,7 +40,7 @@ pub async fn run(flag_app_id: Option<&str>, flag_api_key: Option<&str>) {
     let client = SoundchartsClient::new(&creds.app_id, &creds.api_key);
     let start = Instant::now();
     let response = client
-        .get("/api/v2/artist/search/test", &[("limit", "1")])
+        .get("/api/v2/artist/search/billie%20eilish", &[("limit", "1")])
         .await;
     let elapsed = start.elapsed();
     println!(
