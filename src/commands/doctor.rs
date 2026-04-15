@@ -1,5 +1,6 @@
 use crate::client::SoundchartsClient;
 use crate::config::{self, is_sandbox, load_config, resolve_credentials};
+use reqwest::Client;
 use std::time::Instant;
 
 pub async fn run(flag_app_id: Option<&str>, flag_api_key: Option<&str>) {
@@ -32,7 +33,7 @@ pub async fn run(flag_app_id: Option<&str>, flag_api_key: Option<&str>) {
             println!("Credentials ......... MISSING (run 'sc auth setup')");
             println!("API connectivity .... SKIPPED (no credentials)");
             println!("Quota remaining ..... SKIPPED");
-            print_version();
+            print_version().await;
             return;
         }
     };
@@ -55,10 +56,45 @@ pub async fn run(flag_app_id: Option<&str>, flag_api_key: Option<&str>) {
         println!("Quota remaining ..... unknown");
     }
 
-    print_version();
+    print_version().await;
 }
 
-fn print_version() {
+async fn print_version() {
     let current = env!("SC_VERSION");
-    println!("CLI version ......... {}", current);
+
+    let latest = fetch_latest_version().await;
+
+    match latest {
+        Some(tag) if tag == current => {
+            println!("CLI version ......... {} (latest)", current);
+        }
+        Some(tag) => {
+            println!("CLI version ......... {} (update available: {})", current, tag);
+            println!();
+            println!("  Run 'sc update' to upgrade.");
+        }
+        None => {
+            println!("CLI version ......... {}", current);
+        }
+    }
+}
+
+async fn fetch_latest_version() -> Option<String> {
+    let client = Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .build()
+        .ok()?;
+
+    let response = client
+        .get("https://api.github.com/repos/oneortwo/soundcharts-cli/releases/latest")
+        .header("User-Agent", "sc-cli")
+        .send()
+        .await
+        .ok()?;
+
+    let body: serde_json::Value = response.json().await.ok()?;
+
+    body.get("tag_name")
+        .and_then(|v| v.as_str())
+        .map(|v| v.trim_start_matches('v').to_string())
 }
