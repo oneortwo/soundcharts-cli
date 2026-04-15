@@ -1,23 +1,25 @@
 # sc — Soundcharts CLI
 
-A command-line interface for the [Soundcharts API](https://developers.soundcharts.com/).
+An unofficial command-line interface for the [Soundcharts API](https://developers.soundcharts.com/).
+
+> **Disclaimer:** This project is not affiliated with, endorsed by, or in any way officially connected to Soundcharts. It is an independent wrapper around their public API. "Soundcharts" is a trademark of its respective owner. You need your own Soundcharts API credentials to use this tool.
 
 ## Install
 
 ### From source
 
 ```bash
-cargo install --git https://github.com/run-with-us/cli-soundcharts
+cargo install --git https://github.com/oneortwo/cli-soundcharts
 ```
 
 ### Prebuilt binaries
 
-Download from [GitHub Releases](https://github.com/run-with-us/cli-soundcharts/releases).
+Download from [GitHub Releases](https://github.com/oneortwo/cli-soundcharts/releases).
 
 ### Install script
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/run-with-us/cli-soundcharts/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/oneortwo/cli-soundcharts/main/install.sh | sh
 ```
 
 ## Quick Start
@@ -85,7 +87,7 @@ sc search artist "Drake" | jq '.[0].uuid'
 
 ## Configuration
 
-Credentials are stored at `~/.config/soundcharts/config.toml`.
+Credentials are stored at `~/.config/soundcharts/config.toml` on your local machine only. They are never sent anywhere other than the Soundcharts API. No telemetry, no analytics, no third-party services.
 
 Credential precedence (highest to lowest):
 1. CLI flags (`--app-id`, `--api-key`)
@@ -101,7 +103,7 @@ Credential precedence (highest to lowest):
 ## Building from source
 
 ```bash
-git clone https://github.com/run-with-us/cli-soundcharts
+git clone https://github.com/oneortwo/cli-soundcharts
 cd cli-soundcharts
 cargo build --release
 # Binary at target/release/sc

@@ -3,7 +3,7 @@ pub fn run() {
     eprintln!("Current version: {current}");
 
     let result = self_update::backends::github::Update::configure()
-        .repo_owner("run-with-us")
+        .repo_owner("oneortwo")
         .repo_name("cli-soundcharts")
         .bin_name("sc")
         .current_version(current)

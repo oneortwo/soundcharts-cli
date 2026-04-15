@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-REPO="run-with-us/cli-soundcharts"
+REPO="oneortwo/cli-soundcharts"
 BINARY="sc"
 
 # Detect OS and architecture
