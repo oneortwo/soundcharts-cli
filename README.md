@@ -85,6 +85,33 @@ sc search artist "Drake" | jq '.[0].uuid'
 | `sc playlist tracks <uuid>` | Get playlist tracks |
 | `sc playlist audience <uuid> --platform spotify` | Get audience data |
 
+## API Endpoint Coverage
+
+The [Soundcharts API](https://developers.soundcharts.com/) has ~130 endpoints across 16 resource groups. This CLI currently covers:
+
+| Resource | Supported | Total | Status |
+|----------|-----------|-------|--------|
+| Search | 3 | 7 | Partial |
+| Artist | 10 | ~32 | Partial |
+| Song | 6 | ~20 | Partial |
+| Album | 5 | ~9 | Partial |
+| Chart | 6 | ~12 | Partial |
+| Playlist | 3 | ~11 | Partial |
+| Radio | 0 | 4 | — |
+| Festival | 0 | 7 | — |
+| Venue | 0 | 7 | — |
+| TikTok | 0 | 3 | — |
+| User | 0 | 4 | — |
+| My Library | 0 | 7 | — |
+| Referential | 0 | 13 | — |
+| Collaborator | 0 | 5 | — |
+| Work | 0 | 6 | — |
+| Publisher | 0 | 5 | — |
+
+**Total: ~33 of ~130 endpoints (~25%)**
+
+PRs welcome for new endpoint support! See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add commands.
+
 ## Configuration
 
 Credentials are stored at `~/.config/soundcharts/config.toml` on your local machine only. They are never sent anywhere other than the Soundcharts API. No telemetry, no analytics, no third-party services.
