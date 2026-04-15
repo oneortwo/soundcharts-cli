@@ -3,6 +3,7 @@ use crate::client::SoundchartsClient;
 use console::Term;
 use serde_json::Value;
 
+#[allow(dead_code)]
 pub struct PaginateResult {
     pub items: Vec<Value>,
     pub total: Option<u64>,
@@ -19,14 +20,13 @@ pub async fn paginate(
     let mut all_items: Vec<Value> = Vec::new();
     let mut offset: usize = 0;
     let mut total: Option<u64> = None;
+    #[allow(unused_assignments)]
     let mut quota_remaining: Option<u64> = None;
 
     let max_items = if args.all {
         None
     } else if let Some(limit) = args.limit {
         Some(limit)
-    } else if args.no_paginate {
-        Some(args.page_size)
     } else {
         Some(args.page_size)
     };

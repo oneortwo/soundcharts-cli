@@ -7,8 +7,10 @@ pub struct Artist {
     pub uuid: String,
     pub name: String,
     #[serde(default)]
+    #[allow(dead_code)]
     pub app_url: Option<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     pub image_url: Option<String>,
     #[serde(default)]
     pub genres: Vec<Genre>,
