@@ -1,6 +1,7 @@
 mod cli;
 mod client;
 mod config;
+mod paginator;
 
 use clap::Parser;
 use cli::Cli;
