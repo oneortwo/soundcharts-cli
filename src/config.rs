@@ -39,9 +39,9 @@ impl std::fmt::Display for CredentialSource {
 }
 
 pub fn config_dir() -> PathBuf {
-    dirs::config_dir()
-        .expect("Could not determine config directory")
-        .join("soundcharts")
+    dirs::home_dir()
+        .expect("Could not determine home directory")
+        .join(".soundcharts")
 }
 
 pub fn config_path() -> PathBuf {

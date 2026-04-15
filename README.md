@@ -233,7 +233,7 @@ PRs welcome for new endpoint support! See [CONTRIBUTING.md](CONTRIBUTING.md) for
 
 ## Configuration
 
-Credentials are stored at `~/.config/soundcharts/config.toml` on your local machine only. They are never sent anywhere other than the Soundcharts API. No telemetry, no analytics, no third-party services.
+Credentials are stored at `~/.soundcharts/config.toml` on your local machine only. They are never sent anywhere other than the Soundcharts API. No telemetry, no analytics, no third-party services.
 
 Credential precedence (highest to lowest):
 1. CLI flags (`--app-id`, `--api-key`)

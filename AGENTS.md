@@ -9,7 +9,7 @@ src/
   main.rs              # Entry point, tokio::main, top-level command dispatch
   cli.rs               # Clap derive structs — all commands, args, and flags defined here
   client.rs            # SoundchartsClient — HTTP GET with auth headers, error handling, quota tracking
-  config.rs            # Config file (~/.config/soundcharts/config.toml), credential resolution chain
+  config.rs            # Config file (~/.soundcharts/config.toml), credential resolution chain
   identifier.rs        # Auto-detect identifier type: UUID, ISRC, UPC, platform URL
   output.rs            # TTY detection, JSON/table/key-value output helpers
   paginator.rs         # Multi-page API fetching with --limit/--all/--no-paginate support
