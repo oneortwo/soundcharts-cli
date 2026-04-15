@@ -1,1 +1,9 @@
-
+pub mod album;
+pub mod artist;
+pub mod auth;
+pub mod chart;
+pub mod doctor;
+pub mod playlist;
+pub mod search;
+pub mod song;
+pub mod update;
