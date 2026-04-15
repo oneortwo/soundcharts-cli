@@ -2,8 +2,36 @@ use comfy_table::{ContentArrangement, Table};
 use console::Term;
 use serde_json::Value;
 
-pub fn is_json_mode(json_flag: bool) -> bool {
-    json_flag || !Term::stdout().is_term()
+#[derive(Debug, Clone, PartialEq)]
+pub enum OutputFormat {
+    Table,
+    Json,
+    Csv,
+}
+
+pub fn resolve_format(json_flag: bool, format_flag: Option<&str>) -> OutputFormat {
+    // Explicit --format takes priority
+    if let Some(fmt) = format_flag {
+        return match fmt {
+            "json" => OutputFormat::Json,
+            "csv" => OutputFormat::Csv,
+            "table" => OutputFormat::Table,
+            _ => {
+                eprintln!("error: Unknown format '{}'. Options: table, json, csv", fmt);
+                std::process::exit(1);
+            }
+        };
+    }
+    // --json flag
+    if json_flag {
+        return OutputFormat::Json;
+    }
+    // TTY detection
+    if Term::stdout().is_term() {
+        OutputFormat::Table
+    } else {
+        OutputFormat::Json
+    }
 }
 
 pub fn print_json(value: &Value) {
@@ -29,6 +57,25 @@ pub fn print_table(headers: &[&str], rows: Vec<Vec<String>>) {
     }
 
     println!("{table}");
+}
+
+pub fn print_csv(headers: &[&str], rows: Vec<Vec<String>>) {
+    // Header row
+    println!("{}", headers.join(","));
+    // Data rows - quote fields that contain commas, quotes, or newlines
+    for row in rows {
+        let fields: Vec<String> = row
+            .iter()
+            .map(|field| {
+                if field.contains(',') || field.contains('"') || field.contains('\n') {
+                    format!("\"{}\"", field.replace('"', "\"\""))
+                } else {
+                    field.clone()
+                }
+            })
+            .collect();
+        println!("{}", fields.join(","));
+    }
 }
 
 pub fn print_kv(pairs: &[(&str, String)]) {

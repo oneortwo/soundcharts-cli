@@ -14,12 +14,7 @@ pub async fn run() {
     // Fetch latest release
     eprint!("Checking latest release... ");
     let url = format!("https://api.github.com/repos/{REPO}/releases/latest");
-    let response = match client
-        .get(&url)
-        .header("User-Agent", "sc-cli")
-        .send()
-        .await
-    {
+    let response = match client.get(&url).header("User-Agent", "sc-cli").send().await {
         Ok(r) => r,
         Err(e) => {
             eprintln!("failed");
@@ -37,10 +32,7 @@ pub async fn run() {
         }
     };
 
-    let latest_tag = body
-        .get("tag_name")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let latest_tag = body.get("tag_name").and_then(|v| v.as_str()).unwrap_or("");
     let latest = latest_tag.trim_start_matches('v');
 
     if latest == current {

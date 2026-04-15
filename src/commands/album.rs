@@ -3,9 +3,10 @@ use crate::client::SoundchartsClient;
 use crate::identifier::{self, Identifier};
 use crate::models::album::Album;
 use crate::output;
+use crate::output::OutputFormat;
 use crate::paginator;
 
-pub async fn get(client: &SoundchartsClient, identifier_str: &str, json_mode: bool) {
+pub async fn get(client: &SoundchartsClient, identifier_str: &str, format: &OutputFormat) {
     let id = match identifier::detect(identifier_str) {
         Ok(id) => id,
         Err(e) => {
@@ -45,19 +46,17 @@ pub async fn get(client: &SoundchartsClient, identifier_str: &str, json_mode: bo
 
     let object = &response.body["object"];
 
-    if json_mode {
-        output::print_json(object);
-        return;
-    }
-
-    match Album::from_value(object) {
-        Some(album) => {
-            println!("{}", album.name);
-            output::print_kv(&album.to_kv());
-        }
-        None => {
-            output::print_json(object);
-        }
+    match format {
+        OutputFormat::Table => match Album::from_value(object) {
+            Some(album) => {
+                println!("{}", album.name);
+                output::print_kv(&album.to_kv());
+            }
+            None => {
+                output::print_json(object);
+            }
+        },
+        _ => output::print_json(object),
     }
 }
 
@@ -65,15 +64,12 @@ pub async fn tracks(
     client: &SoundchartsClient,
     uuid: &str,
     pagination: &PaginationArgs,
-    json_mode: bool,
+    format: &OutputFormat,
 ) {
     let path = format!("/api/v2.26/album/{uuid}/tracks");
     let result = paginator::paginate(client, &path, &[], pagination).await;
 
-    if json_mode {
-        output::print_json_array(&result.items);
-        return;
-    }
+    let headers = &["#", "Name", "ISRC", "UUID"];
 
     let rows: Vec<Vec<String>> = result
         .items
@@ -105,7 +101,11 @@ pub async fn tracks(
         return;
     }
 
-    output::print_table(&["#", "Name", "ISRC", "UUID"], rows);
+    match format {
+        OutputFormat::Json => output::print_json_array(&result.items),
+        OutputFormat::Csv => output::print_csv(headers, rows),
+        OutputFormat::Table => output::print_table(headers, rows),
+    }
 }
 
 pub async fn charts(
@@ -113,15 +113,12 @@ pub async fn charts(
     uuid: &str,
     platform: &str,
     pagination: &PaginationArgs,
-    json_mode: bool,
+    format: &OutputFormat,
 ) {
     let path = format!("/api/v2.26/album/{uuid}/charts/ranks/{platform}");
     let result = paginator::paginate(client, &path, &[], pagination).await;
 
-    if json_mode {
-        output::print_json_array(&result.items);
-        return;
-    }
+    let headers = &["Chart", "Rank", "Date"];
 
     let rows: Vec<Vec<String>> = result
         .items
@@ -149,5 +146,9 @@ pub async fn charts(
         return;
     }
 
-    output::print_table(&["Chart", "Rank", "Date"], rows);
+    match format {
+        OutputFormat::Json => output::print_json_array(&result.items),
+        OutputFormat::Csv => output::print_csv(headers, rows),
+        OutputFormat::Table => output::print_table(headers, rows),
+    }
 }

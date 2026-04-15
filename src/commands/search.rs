@@ -4,6 +4,7 @@ use crate::models::artist::Artist;
 use crate::models::playlist::Playlist;
 use crate::models::song::Song;
 use crate::output;
+use crate::output::OutputFormat;
 use crate::paginator;
 
 const SEARCH_MAX_PAGE_SIZE: usize = 20;
@@ -18,15 +19,10 @@ pub async fn artist(
     client: &SoundchartsClient,
     query: &str,
     pagination: &PaginationArgs,
-    json_mode: bool,
+    format: &OutputFormat,
 ) {
     let path = format!("/api/v2/artist/search/{}", urlencoding::encode(query));
     let result = paginator::paginate(client, &path, &[], &search_pagination(pagination)).await;
-
-    if json_mode {
-        output::print_json_array(&result.items);
-        return;
-    }
 
     let rows: Vec<Vec<String>> = result
         .items
@@ -39,22 +35,21 @@ pub async fn artist(
         return;
     }
 
-    output::print_table(Artist::table_headers(), rows);
+    match format {
+        OutputFormat::Json => output::print_json_array(&result.items),
+        OutputFormat::Csv => output::print_csv(Artist::table_headers(), rows),
+        OutputFormat::Table => output::print_table(Artist::table_headers(), rows),
+    }
 }
 
 pub async fn song(
     client: &SoundchartsClient,
     query: &str,
     pagination: &PaginationArgs,
-    json_mode: bool,
+    format: &OutputFormat,
 ) {
     let path = format!("/api/v2/song/search/{}", urlencoding::encode(query));
     let result = paginator::paginate(client, &path, &[], &search_pagination(pagination)).await;
-
-    if json_mode {
-        output::print_json_array(&result.items);
-        return;
-    }
 
     let rows: Vec<Vec<String>> = result
         .items
@@ -67,22 +62,21 @@ pub async fn song(
         return;
     }
 
-    output::print_table(Song::table_headers(), rows);
+    match format {
+        OutputFormat::Json => output::print_json_array(&result.items),
+        OutputFormat::Csv => output::print_csv(Song::table_headers(), rows),
+        OutputFormat::Table => output::print_table(Song::table_headers(), rows),
+    }
 }
 
 pub async fn playlist(
     client: &SoundchartsClient,
     query: &str,
     pagination: &PaginationArgs,
-    json_mode: bool,
+    format: &OutputFormat,
 ) {
     let path = format!("/api/v2/playlist/search/{}", urlencoding::encode(query));
     let result = paginator::paginate(client, &path, &[], &search_pagination(pagination)).await;
-
-    if json_mode {
-        output::print_json_array(&result.items);
-        return;
-    }
 
     let rows: Vec<Vec<String>> = result
         .items
@@ -95,5 +89,9 @@ pub async fn playlist(
         return;
     }
 
-    output::print_table(Playlist::table_headers(), rows);
+    match format {
+        OutputFormat::Json => output::print_json_array(&result.items),
+        OutputFormat::Csv => output::print_csv(Playlist::table_headers(), rows),
+        OutputFormat::Table => output::print_table(Playlist::table_headers(), rows),
+    }
 }

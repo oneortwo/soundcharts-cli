@@ -2,9 +2,15 @@ use crate::cli::PaginationArgs;
 use crate::client::SoundchartsClient;
 use crate::models::chart::ChartEntry;
 use crate::output;
+use crate::output::OutputFormat;
 use crate::paginator;
 
-pub async fn list(client: &SoundchartsClient, platform: &str, chart_type: &str, json_mode: bool) {
+pub async fn list(
+    client: &SoundchartsClient,
+    platform: &str,
+    chart_type: &str,
+    format: &OutputFormat,
+) {
     let path = match chart_type {
         "album" => format!("/api/v2/chart/album/by-platform/{platform}"),
         _ => format!("/api/v2/chart/song/by-platform/{platform}"),
@@ -12,10 +18,7 @@ pub async fn list(client: &SoundchartsClient, platform: &str, chart_type: &str, 
 
     let response = client.get(&path, &[]).await;
 
-    if json_mode {
-        output::print_json(&response.body);
-        return;
-    }
+    let headers = &["Slug", "Name", "Country"];
 
     if let Some(items) = response.body.get("items").and_then(|i| i.as_array()) {
         let rows: Vec<Vec<String>> = items
@@ -43,7 +46,11 @@ pub async fn list(client: &SoundchartsClient, platform: &str, chart_type: &str, 
             return;
         }
 
-        output::print_table(&["Slug", "Name", "Country"], rows);
+        match format {
+            OutputFormat::Json => output::print_json(&response.body),
+            OutputFormat::Csv => output::print_csv(headers, rows),
+            OutputFormat::Table => output::print_table(headers, rows),
+        }
     } else {
         output::print_json(&response.body);
     }
@@ -55,7 +62,7 @@ pub async fn ranking(
     chart_type: &str,
     date: Option<&str>,
     pagination: &PaginationArgs,
-    json_mode: bool,
+    format: &OutputFormat,
 ) {
     let path = match (chart_type, date) {
         ("album", Some(d)) => format!("/api/v2.26/chart/album/{slug}/ranking/{d}"),
@@ -66,11 +73,6 @@ pub async fn ranking(
 
     let result = paginator::paginate(client, &path, &[], pagination).await;
 
-    if json_mode {
-        output::print_json_array(&result.items);
-        return;
-    }
-
     let rows: Vec<Vec<String>> = result.items.iter().map(ChartEntry::to_row).collect();
 
     if rows.is_empty() {
@@ -78,5 +80,9 @@ pub async fn ranking(
         return;
     }
 
-    output::print_table(ChartEntry::table_headers(), rows);
+    match format {
+        OutputFormat::Json => output::print_json_array(&result.items),
+        OutputFormat::Csv => output::print_csv(ChartEntry::table_headers(), rows),
+        OutputFormat::Table => output::print_table(ChartEntry::table_headers(), rows),
+    }
 }

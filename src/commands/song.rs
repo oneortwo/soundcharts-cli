@@ -3,9 +3,10 @@ use crate::client::SoundchartsClient;
 use crate::identifier::{self, Identifier};
 use crate::models::song::Song;
 use crate::output;
+use crate::output::OutputFormat;
 use crate::paginator;
 
-pub async fn get(client: &SoundchartsClient, identifier_str: &str, json_mode: bool) {
+pub async fn get(client: &SoundchartsClient, identifier_str: &str, format: &OutputFormat) {
     let id = match identifier::detect(identifier_str) {
         Ok(id) => id,
         Err(e) => {
@@ -41,30 +42,30 @@ pub async fn get(client: &SoundchartsClient, identifier_str: &str, json_mode: bo
 
     let object = &response.body["object"];
 
-    if json_mode {
-        output::print_json(object);
-        return;
-    }
-
-    match Song::from_value(object) {
-        Some(song) => {
-            println!("{}", song.name);
-            output::print_kv(&song.to_kv());
-        }
-        None => {
-            output::print_json(object);
-        }
+    match format {
+        OutputFormat::Table => match Song::from_value(object) {
+            Some(song) => {
+                println!("{}", song.name);
+                output::print_kv(&song.to_kv());
+            }
+            None => {
+                output::print_json(object);
+            }
+        },
+        _ => output::print_json(object),
     }
 }
 
-pub async fn audience(client: &SoundchartsClient, uuid: &str, platform: &str, json_mode: bool) {
+pub async fn audience(
+    client: &SoundchartsClient,
+    uuid: &str,
+    platform: &str,
+    format: &OutputFormat,
+) {
     let path = format!("/api/v2/song/{uuid}/audience/{platform}");
     let response = client.get(&path, &[]).await;
 
-    if json_mode {
-        output::print_json(&response.body);
-        return;
-    }
+    let headers = &["Date", "Value"];
 
     if let Some(items) = response.body.get("items").and_then(|i| i.as_array()) {
         let rows: Vec<Vec<String>> = items
@@ -79,7 +80,12 @@ pub async fn audience(client: &SoundchartsClient, uuid: &str, platform: &str, js
                 ]
             })
             .collect();
-        output::print_table(&["Date", "Value"], rows);
+
+        match format {
+            OutputFormat::Json => output::print_json(&response.body),
+            OutputFormat::Csv => output::print_csv(headers, rows),
+            OutputFormat::Table => output::print_table(headers, rows),
+        }
     } else {
         output::print_json(&response.body);
     }
@@ -90,15 +96,12 @@ pub async fn playlists(
     uuid: &str,
     platform: &str,
     pagination: &PaginationArgs,
-    json_mode: bool,
+    format: &OutputFormat,
 ) {
     let path = format!("/api/v2/song/{uuid}/playlist/current/{platform}");
     let result = paginator::paginate(client, &path, &[], pagination).await;
 
-    if json_mode {
-        output::print_json_array(&result.items);
-        return;
-    }
+    let headers = &["Playlist", "UUID", "Position"];
 
     let rows: Vec<Vec<String>> = result
         .items
@@ -126,7 +129,11 @@ pub async fn playlists(
         return;
     }
 
-    output::print_table(&["Playlist", "UUID", "Position"], rows);
+    match format {
+        OutputFormat::Json => output::print_json_array(&result.items),
+        OutputFormat::Csv => output::print_csv(headers, rows),
+        OutputFormat::Table => output::print_table(headers, rows),
+    }
 }
 
 pub async fn charts(
@@ -134,15 +141,12 @@ pub async fn charts(
     uuid: &str,
     platform: &str,
     pagination: &PaginationArgs,
-    json_mode: bool,
+    format: &OutputFormat,
 ) {
     let path = format!("/api/v2/song/{uuid}/charts/ranks/{platform}");
     let result = paginator::paginate(client, &path, &[], pagination).await;
 
-    if json_mode {
-        output::print_json_array(&result.items);
-        return;
-    }
+    let headers = &["Chart", "Rank", "Date"];
 
     let rows: Vec<Vec<String>> = result
         .items
@@ -170,5 +174,9 @@ pub async fn charts(
         return;
     }
 
-    output::print_table(&["Chart", "Rank", "Date"], rows);
+    match format {
+        OutputFormat::Json => output::print_json_array(&result.items),
+        OutputFormat::Csv => output::print_csv(headers, rows),
+        OutputFormat::Table => output::print_table(headers, rows),
+    }
 }

@@ -14,7 +14,7 @@ use cli::{
 };
 use client::SoundchartsClient;
 use config::resolve_credentials;
-use output::is_json_mode;
+use output::resolve_format;
 
 fn require_client(cli: &Cli) -> SoundchartsClient {
     let creds = match resolve_credentials(cli.app_id.as_deref(), cli.api_key.as_deref()) {
@@ -30,7 +30,7 @@ fn require_client(cli: &Cli) -> SoundchartsClient {
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
-    let json = is_json_mode(cli.json);
+    let format = resolve_format(cli.json, cli.format.as_deref());
 
     match &cli.command {
         Commands::Auth { command } => match command {
@@ -50,13 +50,13 @@ async fn main() {
             let client = require_client(&cli);
             match command {
                 SearchCommands::Artist { query, pagination } => {
-                    commands::search::artist(&client, query, pagination, json).await
+                    commands::search::artist(&client, query, pagination, &format).await
                 }
                 SearchCommands::Song { query, pagination } => {
-                    commands::search::song(&client, query, pagination, json).await
+                    commands::search::song(&client, query, pagination, &format).await
                 }
                 SearchCommands::Playlist { query, pagination } => {
-                    commands::search::playlist(&client, query, pagination, json).await
+                    commands::search::playlist(&client, query, pagination, &format).await
                 }
             }
         }
@@ -64,36 +64,38 @@ async fn main() {
             let client = require_client(&cli);
             match command {
                 ArtistCommands::Get { identifier } => {
-                    commands::artist::get(&client, identifier, json).await
+                    commands::artist::get(&client, identifier, &format).await
                 }
                 ArtistCommands::Songs { uuid, pagination } => {
-                    commands::artist::songs(&client, uuid, pagination, json).await
+                    commands::artist::songs(&client, uuid, pagination, &format).await
                 }
                 ArtistCommands::Albums { uuid, pagination } => {
-                    commands::artist::albums(&client, uuid, pagination, json).await
+                    commands::artist::albums(&client, uuid, pagination, &format).await
                 }
                 ArtistCommands::Stats { uuid } => {
-                    commands::artist::stats(&client, uuid, json).await
+                    commands::artist::stats(&client, uuid, &format).await
                 }
                 ArtistCommands::Audience { uuid, platform } => {
-                    commands::artist::audience(&client, uuid, platform, json).await
+                    commands::artist::audience(&client, uuid, platform, &format).await
                 }
                 ArtistCommands::Playlists {
                     uuid,
                     platform,
                     pagination,
-                } => commands::artist::playlists(&client, uuid, platform, pagination, json).await,
+                } => {
+                    commands::artist::playlists(&client, uuid, platform, pagination, &format).await
+                }
                 ArtistCommands::Charts {
                     uuid,
                     platform,
                     r#type,
                     pagination,
                 } => {
-                    commands::artist::charts(&client, uuid, platform, r#type, pagination, json)
+                    commands::artist::charts(&client, uuid, platform, r#type, pagination, &format)
                         .await
                 }
                 ArtistCommands::Similar { uuid, pagination } => {
-                    commands::artist::similar(&client, uuid, pagination, json).await
+                    commands::artist::similar(&client, uuid, pagination, &format).await
                 }
             }
         }
@@ -101,44 +103,44 @@ async fn main() {
             let client = require_client(&cli);
             match command {
                 SongCommands::Get { identifier } => {
-                    commands::song::get(&client, identifier, json).await
+                    commands::song::get(&client, identifier, &format).await
                 }
                 SongCommands::Audience { uuid, platform } => {
-                    commands::song::audience(&client, uuid, platform, json).await
+                    commands::song::audience(&client, uuid, platform, &format).await
                 }
                 SongCommands::Playlists {
                     uuid,
                     platform,
                     pagination,
-                } => commands::song::playlists(&client, uuid, platform, pagination, json).await,
+                } => commands::song::playlists(&client, uuid, platform, pagination, &format).await,
                 SongCommands::Charts {
                     uuid,
                     platform,
                     pagination,
-                } => commands::song::charts(&client, uuid, platform, pagination, json).await,
+                } => commands::song::charts(&client, uuid, platform, pagination, &format).await,
             }
         }
         Commands::Album { command } => {
             let client = require_client(&cli);
             match command {
                 AlbumCommands::Get { identifier } => {
-                    commands::album::get(&client, identifier, json).await
+                    commands::album::get(&client, identifier, &format).await
                 }
                 AlbumCommands::Tracks { uuid, pagination } => {
-                    commands::album::tracks(&client, uuid, pagination, json).await
+                    commands::album::tracks(&client, uuid, pagination, &format).await
                 }
                 AlbumCommands::Charts {
                     uuid,
                     platform,
                     pagination,
-                } => commands::album::charts(&client, uuid, platform, pagination, json).await,
+                } => commands::album::charts(&client, uuid, platform, pagination, &format).await,
             }
         }
         Commands::Chart { command } => {
             let client = require_client(&cli);
             match command {
                 ChartCommands::List { platform, r#type } => {
-                    commands::chart::list(&client, platform, r#type, json).await
+                    commands::chart::list(&client, platform, r#type, &format).await
                 }
                 ChartCommands::Ranking {
                     slug,
@@ -153,7 +155,7 @@ async fn main() {
                         r#type,
                         date.as_deref(),
                         pagination,
-                        json,
+                        &format,
                     )
                     .await
                 }
@@ -163,13 +165,13 @@ async fn main() {
             let client = require_client(&cli);
             match command {
                 PlaylistCommands::Get { uuid } => {
-                    commands::playlist::get(&client, uuid, json).await
+                    commands::playlist::get(&client, uuid, &format).await
                 }
                 PlaylistCommands::Tracks { uuid, pagination } => {
-                    commands::playlist::tracks(&client, uuid, pagination, json).await
+                    commands::playlist::tracks(&client, uuid, pagination, &format).await
                 }
                 PlaylistCommands::Audience { uuid, platform } => {
-                    commands::playlist::audience(&client, uuid, platform, json).await
+                    commands::playlist::audience(&client, uuid, platform, &format).await
                 }
             }
         }

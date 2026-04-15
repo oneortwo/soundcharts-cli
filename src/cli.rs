@@ -11,6 +11,10 @@ pub struct Cli {
     #[arg(long, global = true)]
     pub json: bool,
 
+    /// Output format: table, json, csv (default: table in terminal, json when piped)
+    #[arg(long, global = true)]
+    pub format: Option<String>,
+
     /// Override App ID
     #[arg(long, global = true)]
     pub app_id: Option<String>,
