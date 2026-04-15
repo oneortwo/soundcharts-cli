@@ -103,10 +103,12 @@ sc search artist "Drake" | jq '.[0].uuid'
 | `sc artist playlists <uuid>` | List playlist placements |
 | `sc artist charts <uuid>` | List chart entries |
 | `sc artist similar <uuid>` | List similar artists |
+| `sc artist identifiers <uuid>` | Get platform identifiers |
 | `sc song get <id>` | Get song (UUID or ISRC) |
 | `sc song audience <uuid> --platform spotify` | Get audience data |
 | `sc song playlists <uuid>` | List playlist placements |
 | `sc song charts <uuid>` | List chart entries |
+| `sc song identifiers <uuid>` | Get platform identifiers |
 | `sc album get <id>` | Get album (UUID or UPC) |
 | `sc album tracks <uuid>` | List album tracks |
 | `sc album charts <uuid>` | List chart entries |
@@ -147,7 +149,7 @@ The [Soundcharts API](https://developers.soundcharts.com/) has ~130 endpoints ac
 | Get chart song entries | ✅ | `sc artist charts <uuid>` |
 | Get chart album entries | ✅ | `sc artist charts <uuid> --type album` |
 | Get ranked artists | ❌ | |
-| Get IDs / platform identifiers | ❌ | |
+| Get IDs / platform identifiers | ✅ | `sc artist identifiers <uuid>` |
 | Get Soundcharts score | ❌ | |
 | Get local audience | ❌ | |
 | Get streaming audience | ❌ | |
@@ -177,7 +179,7 @@ The [Soundcharts API](https://developers.soundcharts.com/) has ~130 endpoints ac
 | Get playlist entries | ✅ | `sc song playlists <uuid>` |
 | Get chart entries | ✅ | `sc song charts <uuid>` |
 | Get ranked songs | ❌ | |
-| Get IDs / platform identifiers | ❌ | |
+| Get IDs / platform identifiers | ✅ | `sc song identifiers <uuid>` |
 | Get lyrics analysis | ❌ | |
 | Get albums containing song | ❌ | |
 | Get popularity | ❌ | |
