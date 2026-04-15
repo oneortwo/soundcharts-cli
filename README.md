@@ -38,20 +38,20 @@ cargo install --git https://github.com/oneortwo/soundcharts-cli --force
 
 ## Shell Completions
 
-Tab-completion for commands, subcommands, and flags.
+Tab-completion for commands, subcommands, and flags. Completions are installed automatically by the install script and kept up to date by `sc update`.
+
+To install manually:
 
 ```bash
 # Fish
 sc completions fish > ~/.config/fish/completions/sc.fish
 
 # Bash
-sc completions bash >> ~/.bashrc
+sc completions bash > ~/.local/share/bash-completion/completions/sc
 
 # Zsh
 sc completions zsh > ~/.zfunc/_sc
 ```
-
-Restart your shell or source the file, then `sc art<TAB>` completes to `sc artist`.
 
 ## Quick Start
 

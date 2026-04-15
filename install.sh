@@ -41,3 +41,31 @@ echo "Installed sc to ${INSTALL_DIR}/${BINARY}"
 if ! echo "$PATH" | grep -q "$INSTALL_DIR"; then
     echo "Add ${INSTALL_DIR} to your PATH to use sc globally."
 fi
+
+# Install shell completions
+SC="${INSTALL_DIR}/${BINARY}"
+if [ -x "$SC" ]; then
+    # Fish
+    if command -v fish >/dev/null 2>&1; then
+        FISH_DIR="${HOME}/.config/fish/completions"
+        mkdir -p "$FISH_DIR"
+        "$SC" completions fish > "${FISH_DIR}/sc.fish"
+        echo "Fish completions installed."
+    fi
+
+    # Bash
+    if command -v bash >/dev/null 2>&1; then
+        BASH_DIR="${HOME}/.local/share/bash-completion/completions"
+        mkdir -p "$BASH_DIR"
+        "$SC" completions bash > "${BASH_DIR}/sc"
+        echo "Bash completions installed."
+    fi
+
+    # Zsh
+    if command -v zsh >/dev/null 2>&1; then
+        ZSH_DIR="${HOME}/.zfunc"
+        mkdir -p "$ZSH_DIR"
+        "$SC" completions zsh > "${ZSH_DIR}/_sc"
+        echo "Zsh completions installed."
+    fi
+fi
