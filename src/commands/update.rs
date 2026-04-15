@@ -1,5 +1,5 @@
 pub fn run() {
-    let current = env!("CARGO_PKG_VERSION");
+    let current = env!("SC_VERSION");
     eprintln!("Current version: {current}");
 
     let result = self_update::backends::github::Update::configure()

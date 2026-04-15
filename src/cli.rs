@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "sc", about = "Soundcharts CLI", version)]
+#[command(name = "sc", about = "Soundcharts CLI", version = env!("SC_VERSION"))]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,

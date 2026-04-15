@@ -59,6 +59,6 @@ pub async fn run(flag_app_id: Option<&str>, flag_api_key: Option<&str>) {
 }
 
 fn print_version() {
-    let current = env!("CARGO_PKG_VERSION");
+    let current = env!("SC_VERSION");
     println!("CLI version ......... {}", current);
 }
