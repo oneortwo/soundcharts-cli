@@ -8,9 +8,167 @@ mod output;
 mod paginator;
 
 use clap::Parser;
-use cli::Cli;
+use cli::{
+    AlbumCommands, ArtistCommands, AuthCommands, ChartCommands, Cli, Commands, PlaylistCommands,
+    SearchCommands, SongCommands,
+};
+use client::SoundchartsClient;
+use config::resolve_credentials;
+use output::is_json_mode;
 
-fn main() {
-    let _cli = Cli::parse();
-    println!("Parsed CLI successfully");
+fn require_client(cli: &Cli) -> SoundchartsClient {
+    let creds = match resolve_credentials(cli.app_id.as_deref(), cli.api_key.as_deref()) {
+        Some(c) => c,
+        None => {
+            eprintln!("error: No credentials configured. Run 'sc auth setup'.");
+            std::process::exit(2);
+        }
+    };
+    SoundchartsClient::new(&creds.app_id, &creds.api_key)
+}
+
+#[tokio::main]
+async fn main() {
+    let cli = Cli::parse();
+    let json = is_json_mode(cli.json);
+
+    match &cli.command {
+        Commands::Auth { command } => match command {
+            AuthCommands::Setup => commands::auth::setup(cli.no_input).await,
+            AuthCommands::Status => {
+                commands::auth::status(cli.app_id.as_deref(), cli.api_key.as_deref()).await
+            }
+        },
+        Commands::Doctor => {
+            commands::doctor::run(cli.app_id.as_deref(), cli.api_key.as_deref()).await
+        }
+        Commands::Update => commands::update::run(),
+        Commands::Search { command } => {
+            let client = require_client(&cli);
+            match command {
+                SearchCommands::Artist { query, pagination } => {
+                    commands::search::artist(&client, query, pagination, json).await
+                }
+                SearchCommands::Song { query, pagination } => {
+                    commands::search::song(&client, query, pagination, json).await
+                }
+                SearchCommands::Playlist { query, pagination } => {
+                    commands::search::playlist(&client, query, pagination, json).await
+                }
+            }
+        }
+        Commands::Artist { command } => {
+            let client = require_client(&cli);
+            match command {
+                ArtistCommands::Get { identifier } => {
+                    commands::artist::get(&client, identifier, json).await
+                }
+                ArtistCommands::Songs { uuid, pagination } => {
+                    commands::artist::songs(&client, uuid, pagination, json).await
+                }
+                ArtistCommands::Albums { uuid, pagination } => {
+                    commands::artist::albums(&client, uuid, pagination, json).await
+                }
+                ArtistCommands::Stats { uuid } => {
+                    commands::artist::stats(&client, uuid, json).await
+                }
+                ArtistCommands::Audience { uuid, platform } => {
+                    commands::artist::audience(&client, uuid, platform, json).await
+                }
+                ArtistCommands::Playlists {
+                    uuid,
+                    platform,
+                    pagination,
+                } => commands::artist::playlists(&client, uuid, platform, pagination, json).await,
+                ArtistCommands::Charts {
+                    uuid,
+                    platform,
+                    r#type,
+                    pagination,
+                } => {
+                    commands::artist::charts(&client, uuid, platform, r#type, pagination, json)
+                        .await
+                }
+                ArtistCommands::Similar { uuid, pagination } => {
+                    commands::artist::similar(&client, uuid, pagination, json).await
+                }
+            }
+        }
+        Commands::Song { command } => {
+            let client = require_client(&cli);
+            match command {
+                SongCommands::Get { identifier } => {
+                    commands::song::get(&client, identifier, json).await
+                }
+                SongCommands::Audience { uuid, platform } => {
+                    commands::song::audience(&client, uuid, platform, json).await
+                }
+                SongCommands::Playlists {
+                    uuid,
+                    platform,
+                    pagination,
+                } => commands::song::playlists(&client, uuid, platform, pagination, json).await,
+                SongCommands::Charts {
+                    uuid,
+                    platform,
+                    pagination,
+                } => commands::song::charts(&client, uuid, platform, pagination, json).await,
+            }
+        }
+        Commands::Album { command } => {
+            let client = require_client(&cli);
+            match command {
+                AlbumCommands::Get { identifier } => {
+                    commands::album::get(&client, identifier, json).await
+                }
+                AlbumCommands::Tracks { uuid, pagination } => {
+                    commands::album::tracks(&client, uuid, pagination, json).await
+                }
+                AlbumCommands::Charts {
+                    uuid,
+                    platform,
+                    pagination,
+                } => commands::album::charts(&client, uuid, platform, pagination, json).await,
+            }
+        }
+        Commands::Chart { command } => {
+            let client = require_client(&cli);
+            match command {
+                ChartCommands::List { platform, r#type } => {
+                    commands::chart::list(&client, platform, r#type, json).await
+                }
+                ChartCommands::Ranking {
+                    slug,
+                    r#type,
+                    date,
+                    latest: _,
+                    pagination,
+                } => {
+                    commands::chart::ranking(
+                        &client,
+                        slug,
+                        r#type,
+                        date.as_deref(),
+                        pagination,
+                        json,
+                    )
+                    .await
+                }
+            }
+        }
+        Commands::Playlist { command } => {
+            let client = require_client(&cli);
+            match command {
+                PlaylistCommands::Get { uuid } => {
+                    commands::playlist::get(&client, uuid, json).await
+                }
+                PlaylistCommands::Tracks { uuid, pagination } => {
+                    commands::playlist::tracks(&client, uuid, pagination, json).await
+                }
+                PlaylistCommands::Audience { uuid, platform } => {
+                    commands::playlist::audience(&client, uuid, platform, json).await
+                }
+            }
+        }
+    }
 }
