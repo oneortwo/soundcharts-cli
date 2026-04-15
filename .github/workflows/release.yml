@@ -2,45 +2,96 @@ name: Release
 
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute CalVer tag
+        id: version
+        run: |
+          today="v$(date -u +%Y.%m.%d)"
+          existing=$(git tag -l "${today}*" | sort -V | tail -1)
+          if [ -z "$existing" ]; then
+            tag="$today"
+          elif [ "$existing" = "$today" ]; then
+            tag="${today}.2"
+          else
+            n="${existing##*.}"
+            next=$((n + 1))
+            tag="${today}.${next}"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Version: $tag"
+
+      - name: Create tag
+        run: |
+          git tag ${{ steps.version.outputs.tag }}
+          git push origin ${{ steps.version.outputs.tag }}
+
   build:
+    needs: version
     strategy:
       matrix:
         include:
           - target: aarch64-apple-darwin
-            os: macos-latest
+            runner: macos-latest
           - target: x86_64-apple-darwin
-            os: macos-latest
+            runner: macos-latest
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-    runs-on: ${{ matrix.os }}
+            runner: ubuntu-latest
+
+    runs-on: ${{ matrix.runner }}
+
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      - run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
       - name: Package
         run: |
           cd target/${{ matrix.target }}/release
           tar czf ../../../sc-${{ matrix.target }}.tar.gz sc
-      - uses: actions/upload-artifact@v4
+          cd ../../..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
           name: sc-${{ matrix.target }}
           path: sc-${{ matrix.target }}.tar.gz
 
   release:
-    needs: build
+    needs: [version, build]
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          generate_release_notes: true
           files: sc-*.tar.gz
