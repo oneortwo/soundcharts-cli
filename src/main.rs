@@ -42,7 +42,7 @@ async fn main() {
         Commands::Doctor => {
             commands::doctor::run(cli.app_id.as_deref(), cli.api_key.as_deref()).await
         }
-        Commands::Update => commands::update::run(),
+        Commands::Update => commands::update::run().await,
         Commands::Completions { shell } => {
             clap_complete::generate(*shell, &mut Cli::command(), "sc", &mut std::io::stdout());
         }

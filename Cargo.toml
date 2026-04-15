@@ -22,5 +22,4 @@ dialoguer = "0.11"
 console = "0.15"
 comfy-table = "7"
 dirs = "6"
-self_update = { version = "0.42", features = ["archive-tar", "compression-flate2", "signatures"] }
 urlencoding = "2"
