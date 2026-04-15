@@ -22,12 +22,7 @@ pub fn print_table(headers: &[&str], rows: Vec<Vec<String>>) {
     let mut table = Table::new();
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.load_preset(comfy_table::presets::NOTHING);
-    table.set_header(
-        headers
-            .iter()
-            .map(|h| h.to_uppercase())
-            .collect::<Vec<_>>(),
-    );
+    table.set_header(headers.iter().map(|h| h.to_uppercase()).collect::<Vec<_>>());
 
     for row in rows {
         table.add_row(row);

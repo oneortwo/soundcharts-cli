@@ -36,8 +36,7 @@ pub async fn paginate(
         params.push(("offset", offset.to_string()));
         params.push(("limit", args.page_size.to_string()));
 
-        let param_refs: Vec<(&str, &str)> =
-            params.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        let param_refs: Vec<(&str, &str)> = params.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let response = client.get(path, &param_refs).await;
         quota_remaining = response.quota_remaining;
 

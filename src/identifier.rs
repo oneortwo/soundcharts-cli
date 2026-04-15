@@ -105,10 +105,7 @@ mod tests {
     #[test]
     fn test_detect_upc() {
         let result = detect("602435853161");
-        assert_eq!(
-            result.unwrap(),
-            Identifier::Upc("602435853161".to_string())
-        );
+        assert_eq!(result.unwrap(), Identifier::Upc("602435853161".to_string()));
     }
 
     #[test]

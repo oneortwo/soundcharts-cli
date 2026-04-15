@@ -1,7 +1,9 @@
 mod cli;
 mod client;
+mod commands;
 mod config;
 mod identifier;
+mod models;
 mod output;
 mod paginator;
 
