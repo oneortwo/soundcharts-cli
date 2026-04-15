@@ -52,7 +52,7 @@ src/
 - Clippy warnings must be clean — fix them, don't suppress
 - Commit often — after each meaningful change. Use conventional commits (`feat:`, `fix:`, `chore:`)
 - When adding or removing endpoint support, update the API Endpoint Coverage tables in README.md:
-  - Set the endpoint row's "Supported" to "Yes" and fill in the "CLI Command" column
+  - Set the endpoint row's "Supported" to ✅ and fill in the "CLI Command" column
   - If adding a new resource group, move it from the "Not Yet Supported" section into its own table
   - The tables are grouped by resource (Search, Artist, Song, Album, Chart, Playlist) with individual rows per endpoint
 

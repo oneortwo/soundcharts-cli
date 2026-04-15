@@ -107,110 +107,110 @@ The [Soundcharts API](https://developers.soundcharts.com/) has ~130 endpoints ac
 
 | Endpoint | Supported | CLI Command |
 |----------|-----------|-------------|
-| Search artist by name | Yes | `sc search artist <query>` |
-| Search song by name | Yes | `sc search song <query>` |
-| Search playlist by name | Yes | `sc search playlist <query>` |
-| Search radio by name | No | |
-| Search festival by name | No | |
-| Search venue by name | No | |
-| Get Soundcharts URL from platform URL | No | |
+| Search artist by name | ✅ | `sc search artist <query>` |
+| Search song by name | ✅ | `sc search song <query>` |
+| Search playlist by name | ✅ | `sc search playlist <query>` |
+| Search radio by name | ❌ | |
+| Search festival by name | ❌ | |
+| Search venue by name | ❌ | |
+| Get Soundcharts URL from platform URL | ❌ | |
 
 ### Artist
 
 | Endpoint | Supported | CLI Command |
 |----------|-----------|-------------|
-| Get artist metadata | Yes | `sc artist get <uuid>` |
-| Get artist by platform ID | Yes | `sc artist get <url>` |
-| Get artist songs | Yes | `sc artist songs <uuid>` |
-| Get artist albums | Yes | `sc artist albums <uuid>` |
-| Get similar artists | Yes | `sc artist similar <uuid>` |
-| Get current stats | Yes | `sc artist stats <uuid>` |
-| Get audience | Yes | `sc artist audience <uuid>` |
-| Get playlist entries | Yes | `sc artist playlists <uuid>` |
-| Get chart song entries | Yes | `sc artist charts <uuid>` |
-| Get chart album entries | Yes | `sc artist charts <uuid> --type album` |
-| Get ranked artists | No | |
-| Get IDs / platform identifiers | No | |
-| Get Soundcharts score | No | |
-| Get local audience | No | |
-| Get streaming audience | No | |
-| Get local streaming audience | No | |
-| Get retention | No | |
-| Get popularity | No | |
-| Get audience report (latest) | No | |
-| Get audience report dates | No | |
-| Get audience report (by date) | No | |
-| Get short videos | No | |
-| Get short video audience | No | |
-| Get playlist reach | No | |
-| Get radio spins | No | |
-| Get radio spin count | No | |
-| Get events | No | |
-| Add links | No | |
-| Get contacts | No | |
+| Get artist metadata | ✅ | `sc artist get <uuid>` |
+| Get artist by platform ID | ✅ | `sc artist get <url>` |
+| Get artist songs | ✅ | `sc artist songs <uuid>` |
+| Get artist albums | ✅ | `sc artist albums <uuid>` |
+| Get similar artists | ✅ | `sc artist similar <uuid>` |
+| Get current stats | ✅ | `sc artist stats <uuid>` |
+| Get audience | ✅ | `sc artist audience <uuid>` |
+| Get playlist entries | ✅ | `sc artist playlists <uuid>` |
+| Get chart song entries | ✅ | `sc artist charts <uuid>` |
+| Get chart album entries | ✅ | `sc artist charts <uuid> --type album` |
+| Get ranked artists | ❌ | |
+| Get IDs / platform identifiers | ❌ | |
+| Get Soundcharts score | ❌ | |
+| Get local audience | ❌ | |
+| Get streaming audience | ❌ | |
+| Get local streaming audience | ❌ | |
+| Get retention | ❌ | |
+| Get popularity | ❌ | |
+| Get audience report (latest) | ❌ | |
+| Get audience report dates | ❌ | |
+| Get audience report (by date) | ❌ | |
+| Get short videos | ❌ | |
+| Get short video audience | ❌ | |
+| Get playlist reach | ❌ | |
+| Get radio spins | ❌ | |
+| Get radio spin count | ❌ | |
+| Get events | ❌ | |
+| Add links | ❌ | |
+| Get contacts | ❌ | |
 
 ### Song
 
 | Endpoint | Supported | CLI Command |
 |----------|-----------|-------------|
-| Get song metadata | Yes | `sc song get <uuid>` |
-| Get song by ISRC | Yes | `sc song get <isrc>` |
-| Get song by platform ID | Yes | `sc song get <url>` |
-| Get audience | Yes | `sc song audience <uuid>` |
-| Get playlist entries | Yes | `sc song playlists <uuid>` |
-| Get chart entries | Yes | `sc song charts <uuid>` |
-| Get ranked songs | No | |
-| Get IDs / platform identifiers | No | |
-| Get lyrics analysis | No | |
-| Get albums containing song | No | |
-| Get popularity | No | |
-| Get playlist reach | No | |
-| Get radio spins | No | |
-| Add links | No | |
+| Get song metadata | ✅ | `sc song get <uuid>` |
+| Get song by ISRC | ✅ | `sc song get <isrc>` |
+| Get song by platform ID | ✅ | `sc song get <url>` |
+| Get audience | ✅ | `sc song audience <uuid>` |
+| Get playlist entries | ✅ | `sc song playlists <uuid>` |
+| Get chart entries | ✅ | `sc song charts <uuid>` |
+| Get ranked songs | ❌ | |
+| Get IDs / platform identifiers | ❌ | |
+| Get lyrics analysis | ❌ | |
+| Get albums containing song | ❌ | |
+| Get popularity | ❌ | |
+| Get playlist reach | ❌ | |
+| Get radio spins | ❌ | |
+| Add links | ❌ | |
 
 ### Album
 
 | Endpoint | Supported | CLI Command |
 |----------|-----------|-------------|
-| Get album by UUID | Yes | `sc album get <uuid>` |
-| Get album by UPC | Yes | `sc album get <upc>` |
-| Get album by platform ID | Yes | `sc album get <url>` |
-| Get tracklisting | Yes | `sc album tracks <uuid>` |
-| Get chart entries | Yes | `sc album charts <uuid>` |
-| Get IDs / platform identifiers | No | |
-| Get audience | No | |
-| Get popularity | No | |
+| Get album by UUID | ✅ | `sc album get <uuid>` |
+| Get album by UPC | ✅ | `sc album get <upc>` |
+| Get album by platform ID | ✅ | `sc album get <url>` |
+| Get tracklisting | ✅ | `sc album tracks <uuid>` |
+| Get chart entries | ✅ | `sc album charts <uuid>` |
+| Get IDs / platform identifiers | ❌ | |
+| Get audience | ❌ | |
+| Get popularity | ❌ | |
 
 ### Chart
 
 | Endpoint | Supported | CLI Command |
 |----------|-----------|-------------|
-| List song charts by platform | Yes | `sc chart list --platform spotify` |
-| List album charts by platform | Yes | `sc chart list --platform spotify --type album` |
-| Get song chart ranking (latest) | Yes | `sc chart ranking <slug>` |
-| Get song chart ranking (by date) | Yes | `sc chart ranking <slug> --date 2025-01-01` |
-| Get album chart ranking (latest) | Yes | `sc chart ranking <slug> --type album` |
-| Get album chart ranking (by date) | Yes | `sc chart ranking <slug> --type album --date 2025-01-01` |
-| Get song chart available dates | No | |
-| Get album chart available dates | No | |
-| TikTok music ranking (latest) | No | |
-| TikTok music ranking dates | No | |
-| TikTok music ranking (by date) | No | |
+| List song charts by platform | ✅ | `sc chart list --platform spotify` |
+| List album charts by platform | ✅ | `sc chart list --platform spotify --type album` |
+| Get song chart ranking (latest) | ✅ | `sc chart ranking <slug>` |
+| Get song chart ranking (by date) | ✅ | `sc chart ranking <slug> --date 2025-01-01` |
+| Get album chart ranking (latest) | ✅ | `sc chart ranking <slug> --type album` |
+| Get album chart ranking (by date) | ✅ | `sc chart ranking <slug> --type album --date 2025-01-01` |
+| Get song chart available dates | ❌ | |
+| Get album chart available dates | ❌ | |
+| TikTok music ranking (latest) | ❌ | |
+| TikTok music ranking dates | ❌ | |
+| TikTok music ranking (by date) | ❌ | |
 
 ### Playlist
 
 | Endpoint | Supported | CLI Command |
 |----------|-----------|-------------|
-| Get playlist metadata | Yes | `sc playlist get <uuid>` |
-| Get tracklisting (latest) | Yes | `sc playlist tracks <uuid>` |
-| Get audience | Yes | `sc playlist audience <uuid>` |
-| List playlists | No | |
-| Get playlist by platform ID | No | |
-| Get curators by platform | No | |
-| Get playlists by curator | No | |
-| Get playlists by type | No | |
-| Get tracklisting dates | No | |
-| Get tracklisting (by date) | No | |
+| Get playlist metadata | ✅ | `sc playlist get <uuid>` |
+| Get tracklisting (latest) | ✅ | `sc playlist tracks <uuid>` |
+| Get audience | ✅ | `sc playlist audience <uuid>` |
+| List playlists | ❌ | |
+| Get playlist by platform ID | ❌ | |
+| Get curators by platform | ❌ | |
+| Get playlists by curator | ❌ | |
+| Get playlists by type | ❌ | |
+| Get tracklisting dates | ❌ | |
+| Get tracklisting (by date) | ❌ | |
 
 ### Not Yet Supported
 
