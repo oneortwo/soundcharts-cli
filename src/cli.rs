@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use clap_complete::Shell;
 
 #[derive(Parser)]
 #[command(name = "sc", about = "Soundcharts CLI", version = env!("SC_VERSION"))]
@@ -66,6 +67,11 @@ pub enum Commands {
     Chart {
         #[command(subcommand)]
         command: ChartCommands,
+    },
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for
+        shell: Shell,
     },
     /// Query playlist data
     Playlist {

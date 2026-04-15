@@ -69,7 +69,10 @@ async fn print_version() {
             println!("CLI version ......... {} (latest)", current);
         }
         Some(tag) => {
-            println!("CLI version ......... {} (update available: {})", current, tag);
+            println!(
+                "CLI version ......... {} (update available: {})",
+                current, tag
+            );
             println!();
             println!("  Run 'sc update' to upgrade.");
         }

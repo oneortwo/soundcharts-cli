@@ -36,6 +36,23 @@ If you installed via cargo:
 cargo install --git https://github.com/oneortwo/soundcharts-cli --force
 ```
 
+## Shell Completions
+
+Tab-completion for commands, subcommands, and flags.
+
+```bash
+# Fish
+sc completions fish > ~/.config/fish/completions/sc.fish
+
+# Bash
+sc completions bash >> ~/.bashrc
+
+# Zsh
+sc completions zsh > ~/.zfunc/_sc
+```
+
+Restart your shell or source the file, then `sc art<TAB>` completes to `sc artist`.
+
 ## Quick Start
 
 ```bash
