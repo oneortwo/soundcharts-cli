@@ -139,6 +139,15 @@ pub async fn run() {
 
     eprintln!("Updated to {latest}!");
 
+    if let Some(notes) = body.get("body").and_then(|b| b.as_str()) {
+        let notes = notes.trim();
+        if !notes.is_empty() && !notes.starts_with("**Full Changelog**") {
+            eprintln!();
+            eprintln!("What's new:");
+            eprintln!("{notes}");
+        }
+    }
+
     install_completions();
 }
 
