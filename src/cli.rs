@@ -167,8 +167,11 @@ pub enum SearchCommands {
 pub enum ArtistCommands {
     /// Get artist metadata (accepts UUID or platform URL)
     Get {
-        /// Artist UUID or platform URL
+        /// Artist UUID, platform URL, or bare platform ID (with --platform)
         identifier: String,
+        /// Treat the identifier as a bare platform ID (e.g. spotify, youtube, apple-music)
+        #[arg(long)]
+        platform: Option<String>,
     },
     /// List artist's songs
     Songs {
@@ -236,10 +239,13 @@ pub enum ArtistCommands {
 
 #[derive(Subcommand)]
 pub enum SongCommands {
-    /// Get song metadata (accepts UUID or ISRC)
+    /// Get song metadata (accepts UUID, ISRC, or platform URL)
     Get {
-        /// Song UUID or ISRC
+        /// Song UUID, ISRC, platform URL, or bare platform ID (with --platform)
         identifier: String,
+        /// Treat the identifier as a bare platform ID (e.g. youtube, spotify, apple-music)
+        #[arg(long)]
+        platform: Option<String>,
     },
     /// Get audience data
     Audience {
@@ -278,10 +284,13 @@ pub enum SongCommands {
 
 #[derive(Subcommand)]
 pub enum AlbumCommands {
-    /// Get album metadata (accepts UUID or UPC)
+    /// Get album metadata (accepts UUID, UPC, or platform URL)
     Get {
-        /// Album UUID or UPC
+        /// Album UUID, UPC, platform URL, or bare platform ID (with --platform)
         identifier: String,
+        /// Treat the identifier as a bare platform ID (e.g. spotify, apple-music)
+        #[arg(long)]
+        platform: Option<String>,
     },
     /// List album tracks
     Tracks {
@@ -359,8 +368,11 @@ pub enum PlaylistCommands {
 pub enum WorkCommands {
     /// Get work metadata (accepts UUID, ISWC, or platform URL)
     Get {
-        /// Work UUID, ISWC, or platform URL
+        /// Work UUID, ISWC, platform URL, or bare platform ID (with --platform)
         identifier: String,
+        /// Treat the identifier as a bare platform ID
+        #[arg(long)]
+        platform: Option<String>,
     },
     /// Get platform identifiers
     Identifiers {
@@ -380,8 +392,11 @@ pub enum WorkCommands {
 pub enum CollaboratorCommands {
     /// Get collaborator metadata (accepts UUID, IPI, or platform URL)
     Get {
-        /// Collaborator UUID, IPI, or platform URL
+        /// Collaborator UUID, IPI, platform URL, or bare platform ID (with --platform)
         identifier: String,
+        /// Treat the identifier as a bare platform ID
+        #[arg(long)]
+        platform: Option<String>,
     },
     /// Get platform identifiers
     Identifiers {
@@ -394,8 +409,11 @@ pub enum CollaboratorCommands {
 pub enum PublisherCommands {
     /// Get publisher metadata (accepts UUID, IPI, or platform URL)
     Get {
-        /// Publisher UUID, IPI, or platform URL
+        /// Publisher UUID, IPI, platform URL, or bare platform ID (with --platform)
         identifier: String,
+        /// Treat the identifier as a bare platform ID
+        #[arg(long)]
+        platform: Option<String>,
     },
     /// Get platform identifiers
     Identifiers {

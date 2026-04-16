@@ -63,8 +63,11 @@ async fn main() {
         Commands::Artist { command } => {
             let client = require_client(&cli);
             match command {
-                ArtistCommands::Get { identifier } => {
-                    commands::artist::get(&client, identifier, &format).await
+                ArtistCommands::Get {
+                    identifier,
+                    platform,
+                } => {
+                    commands::artist::get(&client, identifier, platform.as_deref(), &format).await
                 }
                 ArtistCommands::Songs { uuid, pagination } => {
                     commands::artist::songs(&client, uuid, pagination, &format).await
@@ -105,9 +108,10 @@ async fn main() {
         Commands::Song { command } => {
             let client = require_client(&cli);
             match command {
-                SongCommands::Get { identifier } => {
-                    commands::song::get(&client, identifier, &format).await
-                }
+                SongCommands::Get {
+                    identifier,
+                    platform,
+                } => commands::song::get(&client, identifier, platform.as_deref(), &format).await,
                 SongCommands::Audience { uuid, platform } => {
                     commands::song::audience(&client, uuid, platform, &format).await
                 }
@@ -129,9 +133,10 @@ async fn main() {
         Commands::Album { command } => {
             let client = require_client(&cli);
             match command {
-                AlbumCommands::Get { identifier } => {
-                    commands::album::get(&client, identifier, &format).await
-                }
+                AlbumCommands::Get {
+                    identifier,
+                    platform,
+                } => commands::album::get(&client, identifier, platform.as_deref(), &format).await,
                 AlbumCommands::Tracks { uuid, pagination } => {
                     commands::album::tracks(&client, uuid, pagination, &format).await
                 }
@@ -184,8 +189,12 @@ async fn main() {
         Commands::Publisher { command } => {
             let client = require_client(&cli);
             match command {
-                PublisherCommands::Get { identifier } => {
-                    commands::publisher::get(&client, identifier, &format).await
+                PublisherCommands::Get {
+                    identifier,
+                    platform,
+                } => {
+                    commands::publisher::get(&client, identifier, platform.as_deref(), &format)
+                        .await
                 }
                 PublisherCommands::Identifiers { uuid } => {
                     commands::publisher::identifiers(&client, uuid, &format).await
@@ -195,8 +204,12 @@ async fn main() {
         Commands::Collaborator { command } => {
             let client = require_client(&cli);
             match command {
-                CollaboratorCommands::Get { identifier } => {
-                    commands::collaborator::get(&client, identifier, &format).await
+                CollaboratorCommands::Get {
+                    identifier,
+                    platform,
+                } => {
+                    commands::collaborator::get(&client, identifier, platform.as_deref(), &format)
+                        .await
                 }
                 CollaboratorCommands::Identifiers { uuid } => {
                     commands::collaborator::identifiers(&client, uuid, &format).await
@@ -206,9 +219,10 @@ async fn main() {
         Commands::Work { command } => {
             let client = require_client(&cli);
             match command {
-                WorkCommands::Get { identifier } => {
-                    commands::work::get(&client, identifier, &format).await
-                }
+                WorkCommands::Get {
+                    identifier,
+                    platform,
+                } => commands::work::get(&client, identifier, platform.as_deref(), &format).await,
                 WorkCommands::Identifiers { uuid } => {
                     commands::work::identifiers(&client, uuid, &format).await
                 }

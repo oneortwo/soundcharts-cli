@@ -4,41 +4,58 @@ use crate::models::collaborator::Collaborator;
 use crate::output;
 use crate::output::OutputFormat;
 
-pub async fn get(client: &SoundchartsClient, identifier_str: &str, format: &OutputFormat) {
-    let id = match identifier::detect(identifier_str) {
-        Ok(id) => id,
-        Err(e) => {
-            eprintln!("error: {e}");
-            std::process::exit(1);
-        }
-    };
-
-    let response = match id {
-        Identifier::Uuid(uuid) => {
-            client
-                .get(&format!("/api/v2/collaborator/{uuid}"), &[])
-                .await
-        }
-        Identifier::Ipi(ipi) => {
-            client
-                .get(&format!("/api/v2/collaborator/by-ipi/{ipi}"), &[])
-                .await
-        }
-        Identifier::PlatformUrl { platform, id } => {
-            client
-                .get(
-                    &format!(
-                        "/api/v2/collaborator/by-platform/{}/{}",
-                        platform,
-                        urlencoding::encode(&id)
-                    ),
-                    &[],
-                )
-                .await
-        }
-        _ => {
-            eprintln!("error: Collaborators can be looked up by UUID, IPI, or platform URL.");
-            std::process::exit(1);
+pub async fn get(
+    client: &SoundchartsClient,
+    identifier_str: &str,
+    platform: Option<&str>,
+    format: &OutputFormat,
+) {
+    let response = if let Some(platform) = platform {
+        client
+            .get(
+                &format!(
+                    "/api/v2/collaborator/by-platform/{}/{}",
+                    platform,
+                    urlencoding::encode(identifier_str)
+                ),
+                &[],
+            )
+            .await
+    } else {
+        let id = match identifier::detect(identifier_str) {
+            Ok(id) => id,
+            Err(e) => {
+                eprintln!("error: {e}");
+                std::process::exit(1);
+            }
+        };
+        match id {
+            Identifier::Uuid(uuid) => {
+                client
+                    .get(&format!("/api/v2/collaborator/{uuid}"), &[])
+                    .await
+            }
+            Identifier::Ipi(ipi) => {
+                client
+                    .get(&format!("/api/v2/collaborator/by-ipi/{ipi}"), &[])
+                    .await
+            }
+            Identifier::PlatformUrl { platform, id } => {
+                client
+                    .get(
+                        &format!(
+                            "/api/v2/collaborator/by-platform/{}/{}",
+                            platform,
+                            urlencoding::encode(&id)
+                        ),
+                        &[],
+                    )
+                    .await
+            }
+            _ => {
+                eprintln!("error: Collaborators can be looked up by UUID, IPI, or platform URL.");
+                std::process::exit(1);
+            }
         }
     };
 
