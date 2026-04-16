@@ -1,10 +1,195 @@
 # sc — Soundcharts CLI
 
-An unofficial command-line interface for the [Soundcharts API](https://developers.soundcharts.com/).
+An unofficial command-line interface for the [Soundcharts API](https://developers.soundcharts.com/), **designed with agent UX in mind**.
 
 > **Disclaimer:** This project is not affiliated with, endorsed by, or in any way officially connected to Soundcharts. It is an independent wrapper around their public API. "Soundcharts" is a trademark of its respective owner. You need your own Soundcharts API credentials to use this tool.
 
+## Built for agents (and humans)
+
+`sc` is friendly to both shell-wielding humans and LLM agents driving a terminal:
+
+- **Auto-JSON when piped** — tables for humans on a TTY, clean JSON the moment you pipe into `jq`, `xargs`, or a file. No `--format` juggling.
+- **Stable, documented exit codes** — `0` ok, `2` auth, `3` not found, `4` rate-limited. Agents can branch on failure without scraping stderr.
+- **stdout/stderr separation** — data on stdout, diagnostics on stderr. `sc foo > data.json` never mixes logs into the payload.
+- **Identifier auto-detection** — pass a UUID, ISRC, ISWC, IPI, UPC, or a Spotify/Apple/Deezer URL. The CLI figures out what you meant.
+- **Predictable pagination** — `--limit N`, `--all`, `--page-size`, `--no-paginate`. No hidden caps, no "why did I only get 20 rows."
+- **Quota-aware** — every call surfaces `x-quota-remaining`. `sc auth status` tells you how much you have left before you burn through it.
+- **Tab completion** — for every command, subcommand, and flag. Works in bash, zsh, and fish.
+- **Discoverable** — `sc <cmd> --help` is exhaustive and machine-readable. `sc doctor` tells you exactly what's wrong.
+- **No telemetry** — credentials stay on your machine, requests only go to Soundcharts.
+
+## Quickstart
+
+```bash
+# 1. Install
+curl -sSL https://raw.githubusercontent.com/oneortwo/soundcharts-cli/main/install.sh | sh
+
+# 2. Authenticate (use "soundcharts" / "soundcharts" for the sandbox)
+sc auth setup
+
+# 3. Confirm it works
+sc doctor
+```
+
+That's it. Everything below is examples.
+
+## Examples
+
+### The basics
+
+```bash
+# Search
+sc search artist "Drake"
+sc search song "One Dance"
+sc search playlist "RapCaviar"
+
+# Fetch by any identifier — sc figures out the type
+sc artist get 11e81bcc-9c1c-ce38-b96b-a0369fe50396
+sc song get USUM71703861                                  # ISRC
+sc album get 00602557775471                               # UPC
+sc work get T-010.140.236-1                               # ISWC
+sc artist get "https://open.spotify.com/artist/3TVXtAsR1Inumwj472S9r4"
+
+# Force JSON even on a TTY
+sc artist stats <uuid> --json
+
+# Paginate a full catalog
+sc artist songs <uuid> --all
+```
+
+### One-liners: search → pipe → dig deeper
+
+The fun part. Because every `sc` command emits JSON when piped and accepts identifiers
+on stdin via `xargs`, you can chain searches into detail lookups without ever copy-pasting
+a UUID.
+
+```bash
+# Search for an artist → grab their UUID → list every song they've ever released
+sc search artist "Phoebe Bridgers" \
+  | jq -r '.[0].uuid' \
+  | xargs sc artist songs --all
+
+# Top song from a search → list every playlist it's currently on
+sc search song "Espresso" \
+  | jq -r '.[0].uuid' \
+  | xargs sc song playlists --all
+
+# From a search term, pull the artist's current Spotify monthly listeners
+sc search artist "Fred again.." \
+  | jq -r '.[0].uuid' \
+  | xargs -I{} sc artist audience {} --platform spotify --json \
+  | jq '.[-1].value'
+
+# ISRC → song → every chart it ever hit
+sc song get USUM72309438 --json \
+  | jq -r '.uuid' \
+  | xargs sc song charts --all
+
+# Artist name → their 5 most similar artists → each one's current stats
+sc search artist "Caroline Polachek" \
+  | jq -r '.[0].uuid' \
+  | xargs sc artist similar --limit 5 \
+  | jq -r '.[].uuid' \
+  | xargs -n1 sc artist stats
+```
+
+### CSV and table shaping with jq/awk
+
+```bash
+# Turn an artist's catalog into a clean CSV (ISRC, title, release date)
+sc search artist "Charli xcx" \
+  | jq -r '.[0].uuid' \
+  | xargs sc artist songs --all \
+  | jq -r '["isrc","title","release"], (.[] | [.isrc, .name, .releaseDate]) | @csv' \
+  > charli.csv
+
+# Rank an artist's songs by playlist reach
+sc artist songs <uuid> --all --json \
+  | jq -r '.[] | "\(.playlistCount)\t\(.name)"' \
+  | sort -rn \
+  | head -20 \
+  | column -t -s $'\t'
+```
+
+### Fan-out with GNU parallel
+
+```bash
+# Enrich 200 ISRCs → one NDJSON record per song, 8 concurrent, quota-aware
+parallel -j8 'sc song get {} --json' :::: isrcs.txt \
+  | jq -c '{isrc, title: .name, artist: .artists[0].name, spotify: .platformIds.spotify}' \
+  > enriched.ndjson
+
+# For an artist's whole catalog, fetch audience per song in parallel
+sc artist songs <uuid> --all \
+  | jq -r '.[].uuid' \
+  | parallel -j6 'sc song audience {} --platform spotify --json' \
+  | jq -s 'map({uuid: .uuid, streams: (.audience | last | .value)}) | sort_by(-.streams)'
+
+# Every Top-10 hit across every Spotify chart today
+sc chart list --platform spotify \
+  | jq -r '.[].slug' \
+  | parallel -j4 'sc chart ranking {} --limit 10 --json' \
+  | jq -s 'flatten | group_by(.song.uuid) | map({song: .[0].song.name, appearances: length}) | sort_by(-.appearances)'
+```
+
+### Multi-step recipes
+
+```bash
+# "What playlists is Drake's new single on, and who owns each one?"
+sc search artist "Drake" \
+  | jq -r '.[0].uuid' \
+  | xargs sc artist songs --limit 1 \
+  | jq -r '.[0].uuid' \
+  | xargs sc song playlists --all \
+  | jq -r '.[] | "\(.playlist.audience)\t\(.playlist.curator.name)\t\(.playlist.name)"' \
+  | sort -rn | head
+
+# Diff a chart week-over-week — who entered, who fell off
+comm -3 \
+  <(sc chart ranking spotify-top-200-global --json | jq -r '.[].song.name' | sort) \
+  <(sc chart ranking spotify-top-200-global --date $(date -v-7d +%F) --json | jq -r '.[].song.name' | sort)
+
+# Compare an artist's reach across platforms in a single table
+sc search artist "SZA" | jq -r '.[0].uuid' | read -r UUID
+for p in spotify instagram tiktok youtube; do
+  echo -e "$p\t$(sc artist audience "$UUID" --platform "$p" --json | jq '.[-1].value')"
+done | column -t
+
+# All of an artist's songs that charted on Billboard in the last 12 months
+sc artist songs <uuid> --all \
+  | jq -r '.[].uuid' \
+  | parallel -j6 'sc song charts {} --all --json' \
+  | jq -s --arg cutoff "$(date -v-1y +%F)" \
+      'flatten | map(select(.chart.platform=="billboard" and .entryDate > $cutoff))'
+
+# Quota-aware batch job: stop if you drop below 500 calls remaining
+while read -r isrc; do
+  remaining=$(sc auth status --json | jq '.quotaRemaining')
+  [ "$remaining" -lt 500 ] && { echo "quota low, stopping" >&2; break; }
+  sc song get "$isrc" --json
+done < isrcs.txt >> out.ndjson
+```
+
+### Exit codes in scripts (and agents)
+
+```bash
+sc artist get "$uuid" > /dev/null
+case $? in
+  0) echo "found" ;;
+  2) echo "check your credentials (sc auth status)" ;;
+  3) echo "no such artist" ;;
+  4) echo "rate limited — back off" ;;
+  *) echo "other failure" ;;
+esac
+```
+
 ## Install
+
+### Install script (recommended)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/oneortwo/soundcharts-cli/main/install.sh | sh
+```
 
 ### From source
 
@@ -15,12 +200,6 @@ cargo install --git https://github.com/oneortwo/soundcharts-cli
 ### Prebuilt binaries
 
 Download from [GitHub Releases](https://github.com/oneortwo/soundcharts-cli/releases).
-
-### Install script
-
-```bash
-curl -sSL https://raw.githubusercontent.com/oneortwo/soundcharts-cli/main/install.sh | sh
-```
 
 ## Update
 
@@ -51,37 +230,6 @@ sc completions bash > ~/.local/share/bash-completion/completions/sc
 
 # Zsh
 sc completions zsh > ~/.zfunc/_sc
-```
-
-## Quick Start
-
-```bash
-# Set up credentials (sandbox uses "soundcharts" for both values)
-sc auth setup
-
-# Check everything works
-sc doctor
-
-# Search for an artist
-sc search artist "Drake"
-
-# Get artist metadata
-sc artist get <uuid>
-
-# List an artist's songs (first page)
-sc artist songs <uuid>
-
-# Get all songs (auto-paginate)
-sc artist songs <uuid> --all
-
-# Get up to 50 songs
-sc artist songs <uuid> --limit 50
-
-# Force JSON output
-sc artist get <uuid> --json
-
-# Pipe-friendly (auto-JSON when not a terminal)
-sc search artist "Drake" | jq '.[0].uuid'
 ```
 
 ## Commands
