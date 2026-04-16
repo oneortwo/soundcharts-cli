@@ -91,9 +91,20 @@ jobs:
         with:
           merge-multiple: true
 
+      - name: Extract changelog
+        id: changelog
+        run: |
+          # Extract the first version section from CHANGELOG.md (between first and second ## headings)
+          notes=$(awk 'BEGIN{f=0} /^## [0-9]/{if(f){exit}; f=1; next} /^## /{if(f){exit}; next} f{print}' CHANGELOG.md)
+          if [ -z "$notes" ]; then
+            notes="See [CHANGELOG.md](https://github.com/oneortwo/soundcharts-cli/blob/main/CHANGELOG.md) for details."
+          fi
+          # Write to file to avoid quoting issues
+          echo "$notes" > /tmp/release-notes.md
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.version.outputs.tag }}
-          generate_release_notes: true
+          body_path: /tmp/release-notes.md
           files: sc-*.tar.gz
