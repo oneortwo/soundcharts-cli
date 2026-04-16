@@ -9,8 +9,8 @@ mod paginator;
 
 use clap::{CommandFactory, Parser};
 use cli::{
-    AlbumCommands, ArtistCommands, AuthCommands, ChartCommands, Cli, Commands, PlaylistCommands,
-    SearchCommands, SongCommands,
+    AlbumCommands, ArtistCommands, AuthCommands, ChartCommands, Cli, CollaboratorCommands,
+    Commands, PlaylistCommands, PublisherCommands, SearchCommands, SongCommands, WorkCommands,
 };
 use client::SoundchartsClient;
 use config::resolve_credentials;
@@ -178,6 +178,42 @@ async fn main() {
                 }
                 PlaylistCommands::Audience { uuid, platform } => {
                     commands::playlist::audience(&client, uuid, platform, &format).await
+                }
+            }
+        }
+        Commands::Publisher { command } => {
+            let client = require_client(&cli);
+            match command {
+                PublisherCommands::Get { identifier } => {
+                    commands::publisher::get(&client, identifier, &format).await
+                }
+                PublisherCommands::Identifiers { uuid } => {
+                    commands::publisher::identifiers(&client, uuid, &format).await
+                }
+            }
+        }
+        Commands::Collaborator { command } => {
+            let client = require_client(&cli);
+            match command {
+                CollaboratorCommands::Get { identifier } => {
+                    commands::collaborator::get(&client, identifier, &format).await
+                }
+                CollaboratorCommands::Identifiers { uuid } => {
+                    commands::collaborator::identifiers(&client, uuid, &format).await
+                }
+            }
+        }
+        Commands::Work { command } => {
+            let client = require_client(&cli);
+            match command {
+                WorkCommands::Get { identifier } => {
+                    commands::work::get(&client, identifier, &format).await
+                }
+                WorkCommands::Identifiers { uuid } => {
+                    commands::work::identifiers(&client, uuid, &format).await
+                }
+                WorkCommands::Recordings { uuid, pagination } => {
+                    commands::work::recordings(&client, uuid, pagination, &format).await
                 }
             }
         }

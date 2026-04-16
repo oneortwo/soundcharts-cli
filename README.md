@@ -117,6 +117,13 @@ sc search artist "Drake" | jq '.[0].uuid'
 | `sc playlist get <uuid>` | Get playlist metadata |
 | `sc playlist tracks <uuid>` | Get playlist tracks |
 | `sc playlist audience <uuid> --platform spotify` | Get audience data |
+| `sc work get <id>` | Get work (UUID, ISWC, or platform URL) |
+| `sc work identifiers <uuid>` | Get platform identifiers |
+| `sc work recordings <uuid>` | List recordings of this work |
+| `sc publisher get <id>` | Get publisher (UUID, IPI, or platform URL) |
+| `sc publisher identifiers <uuid>` | Get platform identifiers |
+| `sc collaborator get <id>` | Get collaborator (UUID, IPI, or platform URL) |
+| `sc collaborator identifiers <uuid>` | Get platform identifiers |
 
 ## API Endpoint Coverage
 
@@ -231,6 +238,34 @@ The [Soundcharts API](https://developers.soundcharts.com/) has ~130 endpoints ac
 | Get tracklisting dates | ❌ | |
 | Get tracklisting (by date) | ❌ | |
 
+### Work
+
+| Endpoint | Supported | CLI Command |
+|----------|-----------|-------------|
+| Get work by UUID | ✅ | `sc work get <uuid>` |
+| Get work by ISWC | ✅ | `sc work get <iswc>` |
+| Get work by platform ID | ✅ | `sc work get <url>` |
+| Get IDs / platform identifiers | ✅ | `sc work identifiers <uuid>` |
+| Get recordings | ✅ | `sc work recordings <uuid>` |
+
+### Publisher
+
+| Endpoint | Supported | CLI Command |
+|----------|-----------|-------------|
+| Get publisher by UUID | ✅ | `sc publisher get <uuid>` |
+| Get publisher by IPI | ✅ | `sc publisher get <ipi>` |
+| Get publisher by platform ID | ✅ | `sc publisher get <url>` |
+| Get IDs / platform identifiers | ✅ | `sc publisher identifiers <uuid>` |
+
+### Collaborator
+
+| Endpoint | Supported | CLI Command |
+|----------|-----------|-------------|
+| Get collaborator by UUID | ✅ | `sc collaborator get <uuid>` |
+| Get collaborator by IPI | ✅ | `sc collaborator get <ipi>` |
+| Get collaborator by platform ID | ✅ | `sc collaborator get <url>` |
+| Get IDs / platform identifiers | ✅ | `sc collaborator identifiers <uuid>` |
+
 ### Not Yet Supported
 
 These resource groups have no CLI support yet:
@@ -244,9 +279,6 @@ These resource groups have no CLI support yet:
 | User | Get blocklists for artists/songs/labels (~4) |
 | My Library | Get/add/delete artist and song lists (~7) |
 | Referential | Platforms, genres, cities, distributors, etc. (~13) |
-| Collaborator | Metadata, by IPI, by platform, IDs (~5) |
-| Work | Metadata, by ISWC, by platform, recordings (~6) |
-| Publisher | Metadata, by IPI, by platform, IDs (~5) |
 
 PRs welcome for new endpoint support! See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add commands.
 

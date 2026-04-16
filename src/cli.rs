@@ -82,6 +82,21 @@ pub enum Commands {
         #[command(subcommand)]
         command: PlaylistCommands,
     },
+    /// Query publisher data
+    Publisher {
+        #[command(subcommand)]
+        command: PublisherCommands,
+    },
+    /// Query collaborator data (songwriters, composers, producers)
+    Collaborator {
+        #[command(subcommand)]
+        command: CollaboratorCommands,
+    },
+    /// Query work data (musical compositions)
+    Work {
+        #[command(subcommand)]
+        command: WorkCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -306,6 +321,55 @@ pub enum PlaylistCommands {
         /// Platform (spotify, apple-music, deezer, amazon)
         #[arg(long)]
         platform: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum WorkCommands {
+    /// Get work metadata (accepts UUID, ISWC, or platform URL)
+    Get {
+        /// Work UUID, ISWC, or platform URL
+        identifier: String,
+    },
+    /// Get platform identifiers
+    Identifiers {
+        /// Work UUID
+        uuid: String,
+    },
+    /// List recordings of this work
+    Recordings {
+        /// Work UUID
+        uuid: String,
+        #[command(flatten)]
+        pagination: PaginationArgs,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum CollaboratorCommands {
+    /// Get collaborator metadata (accepts UUID, IPI, or platform URL)
+    Get {
+        /// Collaborator UUID, IPI, or platform URL
+        identifier: String,
+    },
+    /// Get platform identifiers
+    Identifiers {
+        /// Collaborator UUID
+        uuid: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum PublisherCommands {
+    /// Get publisher metadata (accepts UUID, IPI, or platform URL)
+    Get {
+        /// Publisher UUID, IPI, or platform URL
+        identifier: String,
+    },
+    /// Get platform identifiers
+    Identifiers {
+        /// Publisher UUID
+        uuid: String,
     },
 }
 

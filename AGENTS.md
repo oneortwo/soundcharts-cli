@@ -10,7 +10,7 @@ src/
   cli.rs               # Clap derive structs — all commands, args, and flags defined here
   client.rs            # SoundchartsClient — HTTP GET with auth headers, error handling, quota tracking
   config.rs            # Config file (~/.soundcharts/config.toml), credential resolution chain
-  identifier.rs        # Auto-detect identifier type: UUID, ISRC, UPC, platform URL
+  identifier.rs        # Auto-detect identifier type: UUID, ISRC, ISWC, IPI, UPC, platform URL
   output.rs            # TTY detection, JSON/table/key-value output helpers
   paginator.rs         # Multi-page API fetching with --limit/--all/--no-paginate support
   commands/
@@ -24,6 +24,9 @@ src/
     album.rs           # get, tracks, charts
     chart.rs           # list, ranking (latest or by date)
     playlist.rs        # get, tracks, audience
+    work.rs            # get, identifiers, recordings
+    publisher.rs       # get, identifiers
+    collaborator.rs    # get, identifiers
   models/
     mod.rs             # Module re-exports
     common.rs          # SingleResponse, CollectionResponse, PageInfo structs
@@ -32,6 +35,9 @@ src/
     album.rs           # Album serde struct, table/kv display
     chart.rs           # ChartEntry table display (rank, name, artist, change)
     playlist.rs        # Playlist serde struct, table/kv display
+    work.rs            # Work, Writer, WorkPublisher, AdminPublisher structs
+    publisher.rs       # Publisher serde struct, table/kv display
+    collaborator.rs    # Collaborator serde struct, table/kv display
 ```
 
 ## Development

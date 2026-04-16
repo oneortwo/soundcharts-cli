@@ -3,6 +3,8 @@ pub enum Identifier {
     Uuid(String),
     Isrc(String),
     Upc(String),
+    Iswc(String),
+    Ipi(String),
     PlatformUrl { platform: String, id: String },
 }
 
@@ -19,12 +21,20 @@ pub fn detect(input: &str) -> Result<Identifier, String> {
         return Ok(Identifier::Isrc(input.to_string()));
     }
 
+    if let Some(iswc) = normalize_iswc(input) {
+        return Ok(Identifier::Iswc(iswc));
+    }
+
+    if is_ipi(input) {
+        return Ok(Identifier::Ipi(input.to_string()));
+    }
+
     if is_upc(input) {
         return Ok(Identifier::Upc(input.to_string()));
     }
 
     Err(format!(
-        "Could not detect identifier type for '{}'. Expected: UUID, ISRC, UPC, or platform URL.",
+        "Could not detect identifier type for '{}'. Expected: UUID, ISRC, ISWC, IPI, UPC, or platform URL.",
         input
     ))
 }
@@ -53,6 +63,22 @@ fn is_isrc(s: &str) -> bool {
 
 fn is_upc(s: &str) -> bool {
     (s.len() == 12 || s.len() == 13) && s.chars().all(|c| c.is_ascii_digit())
+}
+
+fn normalize_iswc(s: &str) -> Option<String> {
+    let compact: String = s.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
+    if compact.len() == 11
+        && compact.starts_with('T')
+        && compact[1..].chars().all(|c| c.is_ascii_digit())
+    {
+        Some(compact)
+    } else {
+        None
+    }
+}
+
+fn is_ipi(s: &str) -> bool {
+    s.len() == 11 && s.chars().all(|c| c.is_ascii_digit())
 }
 
 fn parse_platform_url(url: &str) -> Result<Identifier, String> {
@@ -102,10 +128,7 @@ fn parse_platform_url(url: &str) -> Result<Identifier, String> {
 }
 
 fn extract_last_path_segment(url: &str) -> String {
-    url.rsplit('/')
-        .next()
-        .unwrap_or("")
-        .to_string()
+    url.rsplit('/').next().unwrap_or("").to_string()
 }
 
 #[cfg(test)]
@@ -159,6 +182,38 @@ mod tests {
             }
             other => panic!("Expected PlatformUrl, got {:?}", other),
         }
+    }
+
+    #[test]
+    fn test_detect_iswc() {
+        let result = detect("T9280410915");
+        assert_eq!(result.unwrap(), Identifier::Iswc("T9280410915".to_string()));
+    }
+
+    #[test]
+    fn test_detect_iswc_dotted() {
+        let result = detect("T-928.041.091-5");
+        assert_eq!(result.unwrap(), Identifier::Iswc("T9280410915".to_string()));
+    }
+
+    #[test]
+    fn test_detect_ipi() {
+        let result = detect("00832425062");
+        assert_eq!(result.unwrap(), Identifier::Ipi("00832425062".to_string()));
+    }
+
+    #[test]
+    fn test_ipi_not_upc() {
+        // 11 digits should be IPI, not UPC
+        let result = detect("12345678901");
+        assert_eq!(result.unwrap(), Identifier::Ipi("12345678901".to_string()));
+    }
+
+    #[test]
+    fn test_upc_still_works() {
+        // 12 digits should still be UPC
+        let result = detect("602435853161");
+        assert_eq!(result.unwrap(), Identifier::Upc("602435853161".to_string()));
     }
 
     #[test]

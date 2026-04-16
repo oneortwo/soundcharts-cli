@@ -1,6 +1,9 @@
 pub mod album;
 pub mod artist;
 pub mod chart;
+pub mod collaborator;
 pub mod common;
 pub mod playlist;
+pub mod publisher;
 pub mod song;
+pub mod work;
