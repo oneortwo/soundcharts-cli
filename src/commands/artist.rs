@@ -8,32 +8,49 @@ use crate::output;
 use crate::output::OutputFormat;
 use crate::paginator;
 
-pub async fn get(client: &SoundchartsClient, identifier_str: &str, format: &OutputFormat) {
-    let id = match identifier::detect(identifier_str) {
-        Ok(id) => id,
-        Err(e) => {
-            eprintln!("error: {e}");
-            std::process::exit(1);
-        }
-    };
-
-    let response = match id {
-        Identifier::Uuid(uuid) => client.get(&format!("/api/v2.9/artist/{uuid}"), &[]).await,
-        Identifier::PlatformUrl { platform, id } => {
-            client
-                .get(
-                    &format!(
-                        "/api/v2/artist/by-platform/{}/{}",
-                        platform,
-                        urlencoding::encode(&id)
-                    ),
-                    &[],
-                )
-                .await
-        }
-        _ => {
-            eprintln!("error: Artists can be looked up by UUID or platform URL.");
-            std::process::exit(1);
+pub async fn get(
+    client: &SoundchartsClient,
+    identifier_str: &str,
+    platform: Option<&str>,
+    format: &OutputFormat,
+) {
+    let response = if let Some(platform) = platform {
+        client
+            .get(
+                &format!(
+                    "/api/v2/artist/by-platform/{}/{}",
+                    platform,
+                    urlencoding::encode(identifier_str)
+                ),
+                &[],
+            )
+            .await
+    } else {
+        let id = match identifier::detect(identifier_str) {
+            Ok(id) => id,
+            Err(e) => {
+                eprintln!("error: {e}");
+                std::process::exit(1);
+            }
+        };
+        match id {
+            Identifier::Uuid(uuid) => client.get(&format!("/api/v2.9/artist/{uuid}"), &[]).await,
+            Identifier::PlatformUrl { platform, id } => {
+                client
+                    .get(
+                        &format!(
+                            "/api/v2/artist/by-platform/{}/{}",
+                            platform,
+                            urlencoding::encode(&id)
+                        ),
+                        &[],
+                    )
+                    .await
+            }
+            _ => {
+                eprintln!("error: Artists can be looked up by UUID or platform URL.");
+                std::process::exit(1);
+            }
         }
     };
 

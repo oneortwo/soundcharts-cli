@@ -6,37 +6,54 @@ use crate::output;
 use crate::output::OutputFormat;
 use crate::paginator;
 
-pub async fn get(client: &SoundchartsClient, identifier_str: &str, format: &OutputFormat) {
-    let id = match identifier::detect(identifier_str) {
-        Ok(id) => id,
-        Err(e) => {
-            eprintln!("error: {e}");
-            std::process::exit(1);
-        }
-    };
-
-    let response = match id {
-        Identifier::Uuid(uuid) => client.get(&format!("/api/v2.25/song/{uuid}"), &[]).await,
-        Identifier::Isrc(isrc) => {
-            client
-                .get(&format!("/api/v2.25/song/by-isrc/{isrc}"), &[])
-                .await
-        }
-        Identifier::PlatformUrl { platform, id } => {
-            client
-                .get(
-                    &format!(
-                        "/api/v2.25/song/by-platform/{}/{}",
-                        platform,
-                        urlencoding::encode(&id)
-                    ),
-                    &[],
-                )
-                .await
-        }
-        _ => {
-            eprintln!("error: Songs can be looked up by UUID, ISRC, or platform URL.");
-            std::process::exit(1);
+pub async fn get(
+    client: &SoundchartsClient,
+    identifier_str: &str,
+    platform: Option<&str>,
+    format: &OutputFormat,
+) {
+    let response = if let Some(platform) = platform {
+        client
+            .get(
+                &format!(
+                    "/api/v2.25/song/by-platform/{}/{}",
+                    platform,
+                    urlencoding::encode(identifier_str)
+                ),
+                &[],
+            )
+            .await
+    } else {
+        let id = match identifier::detect(identifier_str) {
+            Ok(id) => id,
+            Err(e) => {
+                eprintln!("error: {e}");
+                std::process::exit(1);
+            }
+        };
+        match id {
+            Identifier::Uuid(uuid) => client.get(&format!("/api/v2.25/song/{uuid}"), &[]).await,
+            Identifier::Isrc(isrc) => {
+                client
+                    .get(&format!("/api/v2.25/song/by-isrc/{isrc}"), &[])
+                    .await
+            }
+            Identifier::PlatformUrl { platform, id } => {
+                client
+                    .get(
+                        &format!(
+                            "/api/v2.25/song/by-platform/{}/{}",
+                            platform,
+                            urlencoding::encode(&id)
+                        ),
+                        &[],
+                    )
+                    .await
+            }
+            _ => {
+                eprintln!("error: Songs can be looked up by UUID, ISRC, or platform URL.");
+                std::process::exit(1);
+            }
         }
     };
 
