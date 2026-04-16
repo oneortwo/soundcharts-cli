@@ -2,7 +2,36 @@ use clap::{Parser, Subcommand};
 use clap_complete::Shell;
 
 #[derive(Parser)]
-#[command(name = "sc", about = "Soundcharts CLI", version = env!("SC_VERSION"))]
+#[command(
+    name = "sc",
+    about = "Soundcharts CLI",
+    version = env!("SC_VERSION"),
+    help_template = "\
+{about}
+
+{usage-heading} {usage}
+
+Data:
+  search        Search for artists, songs, or playlists
+  artist        Query artist data
+  song          Query song data
+  album         Query album data
+  chart         Query chart data
+  playlist      Query playlist data
+  work          Query work data (musical compositions)
+  publisher     Query publisher data
+  collaborator  Query collaborator data (songwriters, composers, producers)
+
+System:
+  auth          Manage authentication credentials
+  doctor        Run health checks
+  update        Update sc to the latest version
+  completions   Generate shell completions
+  tree          Show all commands in tree form
+
+Options:
+{options}"
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -97,6 +126,8 @@ pub enum Commands {
         #[command(subcommand)]
         command: WorkCommands,
     },
+    /// Show all commands and subcommands in tree form
+    Tree,
 }
 
 #[derive(Subcommand)]

@@ -4,6 +4,9 @@ All notable changes to `sc` are listed here. Versions follow [CalVer](https://ca
 
 ## Unreleased
 
+- **`sc tree`** — show all commands and subcommands in a tree view
+- **Reorganized help** — `sc --help` now groups commands into Data and System sections
+
 ## 2026.04.16
 
 - **Work, Publisher, Collaborator resources** — query the publishing/works side of the Soundcharts API

@@ -217,5 +217,37 @@ async fn main() {
                 }
             }
         }
+        Commands::Tree => {
+            print_tree(&Cli::command(), "", true);
+        }
+    }
+}
+
+fn print_tree(cmd: &clap::Command, prefix: &str, is_root: bool) {
+    if is_root {
+        println!("{}", cmd.get_name());
+    }
+
+    let subs: Vec<_> = cmd
+        .get_subcommands()
+        .filter(|s| !s.is_hide_set() && s.get_name() != "help")
+        .collect();
+
+    for (i, sub) in subs.iter().enumerate() {
+        let is_last = i == subs.len() - 1;
+        let connector = if is_last { "└──" } else { "├──" };
+        let about = sub
+            .get_about()
+            .map(|a| format!("  {a}"))
+            .unwrap_or_default();
+
+        println!("{prefix}{connector} {}{about}", sub.get_name());
+
+        let child_prefix = if is_last {
+            format!("{prefix}    ")
+        } else {
+            format!("{prefix}│   ")
+        };
+        print_tree(sub, &child_prefix, false);
     }
 }
