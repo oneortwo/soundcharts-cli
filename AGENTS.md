@@ -57,6 +57,7 @@ src/
 - Tests go in `#[cfg(test)] mod tests` at the bottom of the file they test
 - Clippy warnings must be clean — fix them, don't suppress
 - Commit often — after each meaningful change. Use conventional commits (`feat:`, `fix:`, `chore:`)
+- Add user-facing changes to `CHANGELOG.md` under `## Unreleased`. The release workflow automatically extracts the latest version section and uses it as GitHub release notes. `sc update` displays these notes to users.
 - When adding or removing endpoint support, update the API Endpoint Coverage tables in README.md:
   - Set the endpoint row's "Supported" to ✅ and fill in the "CLI Command" column
   - If adding a new resource group, move it from the "Not Yet Supported" section into its own table
