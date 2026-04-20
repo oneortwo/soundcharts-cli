@@ -23,3 +23,10 @@ console = "0.15"
 comfy-table = "7"
 dirs = "6"
 urlencoding = "2"
+
+[target.'cfg(unix)'.dependencies]
+flate2 = "1"
+tar = "0.4"
+
+[target.'cfg(windows)'.dependencies]
+zip = { version = "2", default-features = false, features = ["deflate"] }
