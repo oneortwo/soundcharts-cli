@@ -47,10 +47,19 @@ jobs:
         include:
           - target: aarch64-apple-darwin
             runner: macos-latest
+            archive: tar.gz
           - target: x86_64-apple-darwin
             runner: macos-latest
+            archive: tar.gz
           - target: x86_64-unknown-linux-gnu
             runner: ubuntu-latest
+            archive: tar.gz
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+            archive: zip
+          - target: aarch64-pc-windows-msvc
+            runner: windows-latest
+            archive: zip
 
     runs-on: ${{ matrix.runner }}
 
@@ -67,17 +76,25 @@ jobs:
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Package
+      - name: Package (tar.gz)
+        if: matrix.archive == 'tar.gz'
+        shell: bash
         run: |
           cd target/${{ matrix.target }}/release
           tar czf ../../../sc-${{ matrix.target }}.tar.gz sc
           cd ../../..
 
+      - name: Package (zip)
+        if: matrix.archive == 'zip'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "target/${{ matrix.target }}/release/sc.exe" -DestinationPath "sc-${{ matrix.target }}.zip"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: sc-${{ matrix.target }}
-          path: sc-${{ matrix.target }}.tar.gz
+          path: sc-${{ matrix.target }}.${{ matrix.archive }}
 
   release:
     needs: [version, build]
@@ -107,4 +124,6 @@ jobs:
         with:
           tag_name: ${{ needs.version.outputs.tag }}
           body_path: /tmp/release-notes.md
-          files: sc-*.tar.gz
+          files: |
+            sc-*.tar.gz
+            sc-*.zip

@@ -4,6 +4,7 @@ All notable changes to `sc` are listed here. Versions follow [CalVer](https://ca
 
 ## Unreleased
 
+- **Windows support** — prebuilt binaries for `x86_64-pc-windows-msvc` and `aarch64-pc-windows-msvc` are now published with each release as `.zip` archives. `sc update` downloads and extracts the Windows build natively (no `tar` dependency), and a PowerShell installer (`install.ps1`) is available for one-line setup.
 - **`--platform` flag on `get` commands** — look up a resource by a bare platform ID (e.g. `sc song get dQw4w9WgXcQ --platform youtube`, `sc artist get 4NRXx6U8ABQ --platform spotify`). Works on `song`, `artist`, `album`, `work`, `publisher`, `collaborator`. Previously you had to paste a full URL.
 - **`sc tree`** — show all commands and subcommands in a tree view
 - **Reorganized help** — `sc --help` now groups commands into Data and System sections

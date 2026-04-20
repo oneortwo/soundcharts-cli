@@ -1,6 +1,18 @@
+use std::path::Path;
+
+#[cfg(unix)]
 use std::process::Command;
 
 const REPO: &str = "oneortwo/soundcharts-cli";
+
+#[cfg(windows)]
+const ARCHIVE_EXT: &str = "zip";
+#[cfg(unix)]
+const ARCHIVE_EXT: &str = "tar.gz";
+
+fn binary_name() -> &'static str {
+    if cfg!(windows) { "sc.exe" } else { "sc" }
+}
 
 pub async fn run() {
     let current = env!("SC_VERSION");
@@ -44,7 +56,7 @@ pub async fn run() {
 
     // Find the right asset
     let target = detect_target();
-    let asset_name = format!("sc-{target}.tar.gz");
+    let asset_name = format!("sc-{target}.{ARCHIVE_EXT}");
 
     let download_url = body
         .get("assets")
@@ -99,25 +111,20 @@ pub async fn run() {
     let _ = std::fs::remove_dir_all(&tmp_dir);
     std::fs::create_dir_all(&tmp_dir).expect("Failed to create temp dir");
 
-    let tarball_path = tmp_dir.join("sc.tar.gz");
-    std::fs::write(&tarball_path, &bytes).expect("Failed to write tarball");
+    let archive_path = tmp_dir.join(format!("sc.{ARCHIVE_EXT}"));
+    std::fs::write(&archive_path, &bytes).expect("Failed to write archive");
 
-    let extract_status = Command::new("tar")
-        .args(["xzf", tarball_path.to_str().unwrap(), "-C"])
-        .arg(tmp_dir.to_str().unwrap())
-        .status();
-
-    match extract_status {
-        Ok(s) if s.success() => {}
-        _ => {
-            eprintln!("error: Failed to extract update");
-            std::process::exit(1);
-        }
+    if let Err(e) = extract_archive(&archive_path, &tmp_dir) {
+        eprintln!("error: Failed to extract update: {e}");
+        std::process::exit(1);
     }
 
-    let new_binary = tmp_dir.join("sc");
+    let new_binary = tmp_dir.join(binary_name());
     if !new_binary.exists() {
-        eprintln!("error: Extracted archive does not contain 'sc' binary");
+        eprintln!(
+            "error: Extracted archive does not contain '{}' binary",
+            binary_name()
+        );
         std::process::exit(1);
     }
 
@@ -158,12 +165,38 @@ fn detect_target() -> &'static str {
         "x86_64-apple-darwin"
     } else if cfg!(target_os = "linux") && cfg!(target_arch = "x86_64") {
         "x86_64-unknown-linux-gnu"
+    } else if cfg!(target_os = "windows") && cfg!(target_arch = "x86_64") {
+        "x86_64-pc-windows-msvc"
+    } else if cfg!(target_os = "windows") && cfg!(target_arch = "aarch64") {
+        "aarch64-pc-windows-msvc"
     } else {
         eprintln!("error: Unsupported platform for self-update");
         std::process::exit(1);
     }
 }
 
+#[cfg(unix)]
+fn extract_archive(archive_path: &Path, dest: &Path) -> Result<(), String> {
+    let file = std::fs::File::open(archive_path).map_err(|e| e.to_string())?;
+    let decoder = flate2::read::GzDecoder::new(file);
+    let mut archive = tar::Archive::new(decoder);
+    archive.unpack(dest).map_err(|e| e.to_string())
+}
+
+#[cfg(windows)]
+fn extract_archive(archive_path: &Path, dest: &Path) -> Result<(), String> {
+    let file = std::fs::File::open(archive_path).map_err(|e| e.to_string())?;
+    let mut archive = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
+    archive.extract(dest).map_err(|e| e.to_string())
+}
+
+#[cfg(windows)]
+fn install_completions() {
+    // Shell completions target bash/zsh/fish, none of which are standard on Windows.
+    // PowerShell users can generate completions with `sc completions powershell`.
+}
+
+#[cfg(unix)]
 fn install_completions() {
     let sc = std::env::current_exe().unwrap_or_default();
 

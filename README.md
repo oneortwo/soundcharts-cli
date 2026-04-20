@@ -187,8 +187,16 @@ esac
 
 ### Install script (recommended)
 
+macOS and Linux:
+
 ```bash
 curl -sSL https://raw.githubusercontent.com/oneortwo/soundcharts-cli/main/install.sh | sh
+```
+
+Windows (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/oneortwo/soundcharts-cli/main/install.ps1 | iex
 ```
 
 ### From source
@@ -199,7 +207,7 @@ cargo install --git https://github.com/oneortwo/soundcharts-cli
 
 ### Prebuilt binaries
 
-Download from [GitHub Releases](https://github.com/oneortwo/soundcharts-cli/releases).
+Download from [GitHub Releases](https://github.com/oneortwo/soundcharts-cli/releases). `.tar.gz` archives ship the macOS and Linux builds; `.zip` archives ship the Windows builds.
 
 ## Update
 
@@ -230,6 +238,14 @@ sc completions bash > ~/.local/share/bash-completion/completions/sc
 
 # Zsh
 sc completions zsh > ~/.zfunc/_sc
+```
+
+On Windows, generate PowerShell completions and source them from your profile:
+
+```powershell
+sc completions powershell | Out-String | Invoke-Expression
+# or persist by appending to $PROFILE:
+sc completions powershell >> $PROFILE
 ```
 
 ## Commands
@@ -432,7 +448,7 @@ PRs welcome for new endpoint support! See [CONTRIBUTING.md](CONTRIBUTING.md) for
 
 ## Configuration
 
-Credentials are stored at `~/.soundcharts/config.toml` on your local machine only. They are never sent anywhere other than the Soundcharts API. No telemetry, no analytics, no third-party services.
+Credentials are stored at `~/.soundcharts/config.toml` (or `%USERPROFILE%\.soundcharts\config.toml` on Windows) on your local machine only. They are never sent anywhere other than the Soundcharts API. No telemetry, no analytics, no third-party services.
 
 Credential precedence (highest to lowest):
 1. CLI flags (`--app-id`, `--api-key`)
@@ -465,4 +481,10 @@ cargo build --release --target x86_64-apple-darwin
 
 # Linux
 cargo build --release --target x86_64-unknown-linux-gnu
+
+# Windows (x64)
+cargo build --release --target x86_64-pc-windows-msvc
+
+# Windows (ARM64)
+cargo build --release --target aarch64-pc-windows-msvc
 ```
