@@ -12,18 +12,20 @@ use clap_complete::Shell;
 {usage-heading} {usage}
 
 Data:
-  search        Search for artists, songs, or playlists
+  search        Search artists, songs, albums, collaborators, labels, or playlists
   artist        Query artist data
   song          Query song data
   album         Query album data
   chart         Query chart data
   playlist      Query playlist data
+  label         Query record label data
   work          Query work data (musical compositions)
   publisher     Query publisher data
   collaborator  Query collaborator data (songwriters, composers, producers)
 
 System:
   auth          Manage authentication credentials
+  quota         Show API quota and rate limits
   doctor        Run health checks
   update        Update sc to the latest version
   completions   Generate shell completions
@@ -72,11 +74,18 @@ pub enum Commands {
         #[command(subcommand)]
         command: AuthCommands,
     },
+    /// Show API quota and rate limits
+    Quota,
+    /// Query record label data
+    Label {
+        #[command(subcommand)]
+        command: LabelCommands,
+    },
     /// Run health checks
     Doctor,
     /// Update sc to the latest version
     Update,
-    /// Search for artists, songs, or playlists
+    /// Search artists, songs, albums, collaborators, labels, or playlists
     Search {
         #[command(subcommand)]
         command: SearchCommands,
@@ -140,6 +149,24 @@ pub enum AuthCommands {
 
 #[derive(Subcommand)]
 pub enum SearchCommands {
+    /// Search collaborators (songwriters, composers, producers) by name
+    Collaborator {
+        query: String,
+        #[command(flatten)]
+        pagination: PaginationArgs,
+    },
+    /// Search albums by name
+    Album {
+        query: String,
+        #[command(flatten)]
+        pagination: PaginationArgs,
+    },
+    /// Search record labels by name
+    Label {
+        query: String,
+        #[command(flatten)]
+        pagination: PaginationArgs,
+    },
     /// Search artists by name
     Artist {
         /// Artist name to search for
@@ -177,6 +204,9 @@ pub enum ArtistCommands {
     Songs {
         /// Artist UUID
         uuid: String,
+        /// true: main performer only; false: featuring only; omitted: both
+        #[arg(long, action = clap::ArgAction::Set)]
+        main_performer: Option<bool>,
         #[command(flatten)]
         pagination: PaginationArgs,
     },
@@ -239,6 +269,32 @@ pub enum ArtistCommands {
 
 #[derive(Subcommand)]
 pub enum SongCommands {
+    /// Get current song stats (requires API plan access)
+    Stats {
+        uuid: String,
+        #[arg(long, default_value_t = 7, value_parser = clap::value_parser!(u32).range(1..))]
+        period: u32,
+    },
+    /// Get Soundcharts score history
+    Score {
+        uuid: String,
+        #[command(flatten)]
+        history: HistoryArgs,
+        #[command(flatten)]
+        pagination: PaginationArgs,
+    },
+    /// Get local streaming audience by territory
+    Streaming {
+        uuid: String,
+        #[arg(long)]
+        platform: String,
+        #[command(flatten)]
+        history: HistoryArgs,
+        #[command(flatten)]
+        pagination: PaginationArgs,
+    },
+    /// Get related recordings (API returns a single collection)
+    Related { uuid: String },
     /// Get song metadata (accepts UUID, ISRC, or platform URL)
     Get {
         /// Song UUID, ISRC, platform URL, or bare platform ID (with --platform)
@@ -378,6 +434,8 @@ pub enum WorkCommands {
     Identifiers {
         /// Work UUID
         uuid: String,
+        #[command(flatten)]
+        pagination: PaginationArgs,
     },
     /// List recordings of this work
     Recordings {
@@ -390,6 +448,12 @@ pub enum WorkCommands {
 
 #[derive(Subcommand)]
 pub enum CollaboratorCommands {
+    /// List recordings credited to this collaborator
+    Songs {
+        uuid: String,
+        #[command(flatten)]
+        pagination: PaginationArgs,
+    },
     /// Get collaborator metadata (accepts UUID, IPI, or platform URL)
     Get {
         /// Collaborator UUID, IPI, platform URL, or bare platform ID (with --platform)
@@ -402,6 +466,8 @@ pub enum CollaboratorCommands {
     Identifiers {
         /// Collaborator UUID
         uuid: String,
+        #[command(flatten)]
+        pagination: PaginationArgs,
     },
 }
 
@@ -419,6 +485,8 @@ pub enum PublisherCommands {
     Identifiers {
         /// Publisher UUID
         uuid: String,
+        #[command(flatten)]
+        pagination: PaginationArgs,
     },
 }
 
@@ -439,4 +507,122 @@ pub struct PaginationArgs {
     /// Return only the first page (no pagination)
     #[arg(long)]
     pub no_paginate: bool,
+}
+
+#[derive(Subcommand)]
+pub enum LabelCommands {
+    /// Get label metadata by UUID
+    Get { uuid: String },
+    /// Get label platform identifiers
+    Identifiers {
+        uuid: String,
+        #[command(flatten)]
+        pagination: PaginationArgs,
+    },
+}
+
+#[derive(clap::Args)]
+pub struct HistoryArgs {
+    /// Start date (YYYY-MM-DD); API defaults to 30 days before end date
+    #[arg(long)]
+    pub start_date: Option<String>,
+    /// End date (YYYY-MM-DD)
+    #[arg(long)]
+    pub end_date: Option<String>,
+    /// Date order
+    #[arg(long, default_value = "desc", value_parser = ["asc", "desc"])]
+    pub sort: String,
+}
+
+impl HistoryArgs {
+    pub fn params(&self) -> Vec<(&'static str, String)> {
+        let mut params = vec![("sort", self.sort.clone())];
+        if let Some(date) = &self.start_date {
+            params.push(("startDate", date.clone()));
+        }
+        if let Some(date) = &self.end_date {
+            params.push(("endDate", date.clone()));
+        }
+        params
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_commands_and_pagination_are_discoverable() {
+        for args in [
+            vec!["search", "collaborator", "Example", "--all"],
+            vec!["search", "album", "Example", "--limit", "30"],
+            vec!["search", "label", "Example", "--no-paginate"],
+            vec!["collaborator", "songs", "id", "--page-size", "10"],
+            vec!["label", "get", "id"],
+            vec!["label", "identifiers", "id", "--all"],
+            vec!["song", "stats", "id", "--period", "28"],
+            vec!["song", "related", "id"],
+            vec!["song", "score", "id", "--all"],
+            vec!["quota"],
+            vec!["publisher", "identifiers", "id", "--all"],
+            vec!["work", "identifiers", "id", "--all"],
+            vec!["collaborator", "identifiers", "id", "--all"],
+        ] {
+            assert!(Cli::try_parse_from(std::iter::once("sc").chain(args)).is_ok());
+        }
+    }
+
+    #[test]
+    fn main_performer_keeps_true_false_and_absent_distinct() {
+        for value in [None, Some("true"), Some("false")] {
+            let mut args = vec!["sc", "artist", "songs", "id"];
+            if let Some(value) = value {
+                args.extend(["--main-performer", value]);
+            }
+            let cli = Cli::try_parse_from(args).unwrap();
+            let Commands::Artist {
+                command: ArtistCommands::Songs { main_performer, .. },
+            } = cli.command
+            else {
+                panic!()
+            };
+            assert_eq!(main_performer, value.map(|v| v == "true"));
+        }
+        assert!(Cli::try_parse_from(["sc", "song", "stats", "id", "--period", "0"]).is_err());
+    }
+
+    #[test]
+    fn history_uses_documented_query_names_and_rejects_bad_sort() {
+        let cli = Cli::try_parse_from([
+            "sc",
+            "song",
+            "streaming",
+            "id",
+            "--platform",
+            "youtube",
+            "--start-date",
+            "2026-05-01",
+            "--end-date",
+            "2026-06-01",
+            "--sort",
+            "asc",
+        ])
+        .unwrap();
+        let Commands::Song {
+            command: SongCommands::Streaming { history, .. },
+        } = cli.command
+        else {
+            panic!()
+        };
+        assert_eq!(
+            history.params(),
+            vec![
+                ("sort", "asc".into()),
+                ("startDate", "2026-05-01".into()),
+                ("endDate", "2026-06-01".into())
+            ]
+        );
+        assert!(Cli::try_parse_from(["sc", "song", "score", "id", "--sort", "wrong"]).is_err());
+        assert!(Cli::try_parse_from(["sc", "song", "streaming", "id"]).is_err());
+    }
 }

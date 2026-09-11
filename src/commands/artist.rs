@@ -73,11 +73,16 @@ pub async fn get(
 pub async fn songs(
     client: &SoundchartsClient,
     uuid: &str,
+    main_performer: Option<bool>,
     pagination: &PaginationArgs,
     format: &OutputFormat,
 ) {
     let path = format!("/api/v2.21/artist/{uuid}/songs");
-    let result = paginator::paginate(client, &path, &[], pagination).await;
+    let params: Vec<_> = main_performer
+        .map(|value| ("mainPerformer", value.to_string()))
+        .into_iter()
+        .collect();
+    let result = paginator::paginate(client, &path, &params, pagination).await;
 
     let rows: Vec<Vec<String>> = result
         .items
@@ -351,5 +356,39 @@ pub async fn identifiers(client: &SoundchartsClient, uuid: &str, format: &Output
         OutputFormat::Json => output::print_json_array(&items),
         OutputFormat::Csv => output::print_csv(headers, rows),
         OutputFormat::Table => output::print_table(headers, rows),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::{pagination, server};
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn performer_filter_preserves_false_and_omission() {
+        let (client, requests) = server(vec![json!({"items":[]}); 3]).await;
+        for value in [None, Some(true), Some(false)] {
+            songs(
+                &client,
+                "artist-id",
+                value,
+                &pagination(),
+                &OutputFormat::Json,
+            )
+            .await;
+        }
+        let requests = requests.await.unwrap();
+        for (request, expected) in requests.iter().zip([None, Some("true"), Some("false")]) {
+            assert_eq!(request.path(), "/api/v2.21/artist/artist-id/songs");
+            assert_eq!(
+                request
+                    .query_pairs()
+                    .find(|(k, _)| k == "mainPerformer")
+                    .map(|(_, v)| v.to_string())
+                    .as_deref(),
+                expected
+            );
+        }
     }
 }

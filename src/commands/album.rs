@@ -16,7 +16,7 @@ pub async fn get(
         client
             .get(
                 &format!(
-                    "/api/v2.36/album/by-platform/{}/{}",
+                    "/api/v2.51/album/by-platform/{}/{}",
                     platform,
                     urlencoding::encode(identifier_str)
                 ),
@@ -34,19 +34,19 @@ pub async fn get(
         match id {
             Identifier::Uuid(uuid) => {
                 client
-                    .get(&format!("/api/v2.36/album/by-uuid/{uuid}"), &[])
+                    .get(&format!("/api/v2.51/album/by-uuid/{uuid}"), &[])
                     .await
             }
             Identifier::Upc(upc) => {
                 client
-                    .get(&format!("/api/v2.36/album/by-upc/{upc}"), &[])
+                    .get(&format!("/api/v2.51/album/by-upc/{upc}"), &[])
                     .await
             }
             Identifier::PlatformUrl { platform, id } => {
                 client
                     .get(
                         &format!(
-                            "/api/v2.36/album/by-platform/{}/{}",
+                            "/api/v2.51/album/by-platform/{}/{}",
                             platform,
                             urlencoding::encode(&id)
                         ),
@@ -167,5 +167,49 @@ pub async fn charts(
         OutputFormat::Json => output::print_json_array(&result.items),
         OutputFormat::Csv => output::print_csv(headers, rows),
         OutputFormat::Table => output::print_table(headers, rows),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::server;
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn every_metadata_lookup_uses_v251() {
+        let (client, requests) = server(vec![
+            json!({"object":{"uuid":"id","name":"Album","generatedWithAi":false}});
+            4
+        ])
+        .await;
+        get(
+            &client,
+            "12345678-1234-1234-1234-123456789012",
+            None,
+            &OutputFormat::Json,
+        )
+        .await;
+        get(&client, "123456789012", None, &OutputFormat::Json).await;
+        get(
+            &client,
+            "https://open.spotify.com/album/example",
+            None,
+            &OutputFormat::Json,
+        )
+        .await;
+        get(&client, "example", Some("spotify"), &OutputFormat::Json).await;
+        let requests = requests.await.unwrap();
+        assert_eq!(
+            requests[0].path(),
+            "/api/v2.51/album/by-uuid/12345678-1234-1234-1234-123456789012"
+        );
+        assert_eq!(requests[1].path(), "/api/v2.51/album/by-upc/123456789012");
+        for request in &requests[2..] {
+            assert_eq!(
+                request.path(),
+                "/api/v2.51/album/by-platform/spotify/example"
+            );
+        }
     }
 }

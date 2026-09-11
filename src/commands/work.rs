@@ -74,52 +74,19 @@ pub async fn get(
     }
 }
 
-pub async fn identifiers(client: &SoundchartsClient, uuid: &str, format: &OutputFormat) {
-    let path = format!("/api/v2/work/{uuid}/identifiers");
-    let response = client.get(&path, &[]).await;
-
-    let items = response
-        .body
-        .get("items")
-        .and_then(|i| i.as_array())
-        .cloned()
-        .unwrap_or_default();
-
-    if items.is_empty() {
-        eprintln!("No identifiers found.");
-        return;
-    }
-
-    let rows: Vec<Vec<String>> = items
-        .iter()
-        .map(|item| {
-            vec![
-                item.get("platformName")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string(),
-                item.get("platformCode")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string(),
-                item.get("identifier")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string(),
-                item.get("url")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string(),
-            ]
-        })
-        .collect();
-
-    let headers = &["Platform", "Code", "ID", "URL"];
-    match format {
-        OutputFormat::Json => output::print_json_array(&items),
-        OutputFormat::Csv => output::print_csv(headers, rows),
-        OutputFormat::Table => output::print_table(headers, rows),
-    }
+pub async fn identifiers(
+    client: &SoundchartsClient,
+    uuid: &str,
+    pagination: &crate::cli::PaginationArgs,
+    format: &OutputFormat,
+) {
+    let path = format!("/api/v2/work/{}/identifiers", urlencoding::encode(uuid));
+    let result = crate::paginator::paginate(client, &path, &[], pagination).await;
+    output::print_records(
+        &result.items,
+        &["platformName", "platformCode", "identifier", "url"],
+        format,
+    );
 }
 
 pub async fn recordings(
@@ -146,5 +113,28 @@ pub async fn recordings(
         OutputFormat::Json => output::print_json_array(&result.items),
         OutputFormat::Csv => output::print_csv(Song::table_headers(), rows),
         OutputFormat::Table => output::print_table(Song::table_headers(), rows),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::{pagination, server};
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn identifiers_follow_pages() {
+        let (client, requests) = server(vec![
+            json!({"items":[{"identifier":"one"}],"page":{"next":"next"}}),
+            json!({"items":[],"page":{"next":null}}),
+        ])
+        .await;
+        identifiers(&client, "id", &pagination(), &OutputFormat::Json).await;
+        let requests = requests.await.unwrap();
+        assert_eq!(requests[0].path(), "/api/v2/work/id/identifiers");
+
+        assert!(requests[1]
+            .query_pairs()
+            .any(|(k, v)| k == "offset" && v == "100"));
     }
 }

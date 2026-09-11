@@ -17,6 +17,14 @@ pub struct ApiResponse {
 }
 
 impl SoundchartsClient {
+    #[cfg(test)]
+    pub fn for_test(base_url: &str) -> Self {
+        Self {
+            client: Client::new(),
+            base_url: base_url.into(),
+        }
+    }
+
     pub fn new(app_id: &str, api_key: &str) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert(

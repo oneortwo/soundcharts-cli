@@ -4,6 +4,14 @@ All notable changes to `sc` are listed here. Versions follow [CalVer](https://ca
 
 ## Unreleased
 
+- Add collaborator, album and label search; list collaborator recordings with `sc collaborator songs`.
+- Add `sc label get`, `sc label identifiers`, and `sc quota`.
+- Add song stats (`--period`), score history, local streaming history, and related recordings. History commands accept date ranges and sorting.
+- Add `--main-performer true|false` to artist songs, preserving both credit types when omitted.
+- Upgrade album metadata to v2.51. JSON now uses `generatedWithAi` instead of `generatedWithIa`; terminal output includes labels, genres and AI status.
+- Add pagination to work, publisher and collaborator identifiers. These commands now return `[]` for empty JSON collections and use API field names as CSV headers.
+- Fix `--no-paginate` so it stops after one page even when `--all` or a larger `--limit` is supplied.
+
 - **Windows support** — prebuilt binaries for `x86_64-pc-windows-msvc` and `aarch64-pc-windows-msvc` are now published with each release as `.zip` archives. `sc update` downloads and extracts the Windows build natively (no `tar` dependency), and a PowerShell installer (`install.ps1`) is available for one-line setup.
 - **`--platform` flag on `get` commands** — look up a resource by a bare platform ID (e.g. `sc song get dQw4w9WgXcQ --platform youtube`, `sc artist get 4NRXx6U8ABQ --platform spotify`). Works on `song`, `artist`, `album`, `work`, `publisher`, `collaborator`. Previously you had to paste a full URL.
 - **`sc tree`** — show all commands and subcommands in a tree view

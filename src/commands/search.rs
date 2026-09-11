@@ -95,3 +95,88 @@ pub async fn playlist(
         OutputFormat::Table => output::print_table(Playlist::table_headers(), rows),
     }
 }
+
+pub async fn collaborator(
+    client: &SoundchartsClient,
+    query: &str,
+    pagination: &PaginationArgs,
+    format: &OutputFormat,
+) {
+    let path = format!("/api/v2/collaborator/search/{}", urlencoding::encode(query));
+    let result = paginator::paginate(client, &path, &[], &search_pagination(pagination)).await;
+    output::print_records(&result.items, &["name", "uuid", "roles"], format);
+}
+
+pub async fn album(
+    client: &SoundchartsClient,
+    query: &str,
+    pagination: &PaginationArgs,
+    format: &OutputFormat,
+) {
+    let path = format!("/api/v2/album/search/{}", urlencoding::encode(query));
+    let result = paginator::paginate(client, &path, &[], &search_pagination(pagination)).await;
+    output::print_records(
+        &result.items,
+        &[
+            "name",
+            "uuid",
+            "creditName",
+            "releaseDate",
+            "type",
+            "totalTracks",
+        ],
+        format,
+    );
+}
+
+pub async fn label(
+    client: &SoundchartsClient,
+    query: &str,
+    pagination: &PaginationArgs,
+    format: &OutputFormat,
+) {
+    let path = format!("/api/v2/label/search/{}", urlencoding::encode(query));
+    let result = paginator::paginate(client, &path, &[], &search_pagination(pagination)).await;
+    output::print_records(
+        &result.items,
+        &["name", "uuid", "type", "countryCode"],
+        format,
+    );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::{pagination, server};
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn new_searches_encode_terms_cap_pages_and_follow_next() {
+        for resource in ["collaborator", "album", "label"] {
+            let (client, requests) = server(vec![
+                json!({"items":[{"uuid":"one","name":"Example"}],"page":{"next":"next"}}),
+                json!({"items":[{"uuid":"two","name":"Other"}],"page":{"next":null}}),
+            ])
+            .await;
+            match resource {
+                "collaborator" => {
+                    collaborator(&client, "A/B & C", &pagination(), &OutputFormat::Json).await
+                }
+                "album" => album(&client, "A/B & C", &pagination(), &OutputFormat::Json).await,
+                _ => label(&client, "A/B & C", &pagination(), &OutputFormat::Json).await,
+            }
+            let requests = requests.await.unwrap();
+            assert_eq!(requests.len(), 2);
+            assert_eq!(
+                requests[0].path(),
+                format!("/api/v2/{resource}/search/A%2FB%20%26%20C")
+            );
+            assert!(requests[0]
+                .query_pairs()
+                .any(|(k, v)| k == "limit" && v == "20"));
+            assert!(requests[1]
+                .query_pairs()
+                .any(|(k, v)| k == "offset" && v == "20"));
+        }
+    }
+}
