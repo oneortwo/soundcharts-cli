@@ -248,10 +248,46 @@ sc completions powershell | Out-String | Invoke-Expression
 sc completions powershell >> $PROFILE
 ```
 
+## Publishing and recording discovery
+
+```bash
+sc search collaborator "Example writer" --all
+sc collaborator songs <uuid> --all --format csv
+sc publisher identifiers <uuid> --all
+sc work identifiers <uuid> --all
+sc search album "Example album"
+sc search label "Example label"
+sc label get <uuid>
+sc label identifiers <uuid> --all
+sc artist songs <uuid> --main-performer true --all
+sc song stats <uuid> --period 28
+sc song score <uuid> --start-date 2026-05-01 --end-date 2026-06-01 --all
+sc song streaming <uuid> --platform youtube --start-date 2026-05-01 --all
+sc song related <uuid>
+sc quota
+```
+
+Collaborator songs are recordings, not compositions or ownership shares. Use `sc work recordings` for a known composition. `--main-performer false` selects featuring credits; omit the flag for both.
+
+Score and streaming history accept `--start-date`, `--end-date`, and `--sort asc|desc`. Without dates the API chooses its default period. Paginated commands accept `--all`, `--limit`, `--page-size`, and `--no-paginate`; `--no-paginate` stops after one request even with `--all`. Related tracks has no documented pagination parameters and is fetched once.
+
+Album lookups use v2.51 and return `generatedWithAi` (replacing the earlier `generatedWithIa` spelling). Terminal metadata also displays labels, genres and AI status. New commands preserve raw JSON fields and support `--format csv` and `--format table`; empty collections return `[]` in JSON.
+
 ## Commands
 
 | Command | Description |
 |---------|-------------|
+| `sc search collaborator <query>` | Search collaborators by name |
+| `sc search album <query>` | Search albums by name |
+| `sc search label <query>` | Search labels by name |
+| `sc collaborator songs <uuid>` | List collaborator recordings |
+| `sc label get <uuid>` | Get label metadata |
+| `sc label identifiers <uuid>` | Get label identifiers |
+| `sc song stats <uuid>` | Get current song metrics |
+| `sc song score <uuid>` | Get score history |
+| `sc song streaming <uuid> --platform youtube` | Get local streaming history |
+| `sc song related <uuid>` | Get related recordings |
+| `sc quota` | Show quota and rate limits |
 | `sc auth setup` | Configure API credentials |
 | `sc auth status` | Show auth state and quota |
 | `sc doctor` | Run health checks |
@@ -291,12 +327,15 @@ sc completions powershell >> $PROFILE
 
 ## API Endpoint Coverage
 
-The [Soundcharts API](https://developers.soundcharts.com/) has ~130 endpoints across 16 resource groups. The table below lists every known endpoint and whether this CLI supports it.
+Endpoint coverage below includes the publishing and recording additions through [API 2.52](https://developers.soundcharts.com/changelog), reviewed September 11, 2026. API plan restrictions still apply; current song stats require premium access.
 
 ### Search
 
 | Endpoint | Supported | CLI Command |
 |----------|-----------|-------------|
+| Search collaborator by name | ✅ | `sc search collaborator <query>` |
+| Search album by name | ✅ | `sc search album <query>` |
+| Search label by name | ✅ | `sc search label <query>` |
 | Search artist by name | ✅ | `sc search artist <query>` |
 | Search song by name | ✅ | `sc search song <query>` |
 | Search playlist by name | ✅ | `sc search playlist <query>` |
@@ -343,6 +382,10 @@ The [Soundcharts API](https://developers.soundcharts.com/) has ~130 endpoints ac
 
 | Endpoint | Supported | CLI Command |
 |----------|-----------|-------------|
+| Get current stats | ✅ | `sc song stats <uuid> --period 7` |
+| Get Soundcharts score | ✅ | `sc song score <uuid>` |
+| Get local streaming audience | ✅ | `sc song streaming <uuid> --platform youtube` |
+| Get related tracks | ✅ | `sc song related <uuid>` |
 | Get song metadata | ✅ | `sc song get <uuid>` |
 | Get song by ISRC | ✅ | `sc song get <isrc>` |
 | Get song by platform ID | ✅ | `sc song get <url>` |
@@ -425,10 +468,24 @@ The [Soundcharts API](https://developers.soundcharts.com/) has ~130 endpoints ac
 
 | Endpoint | Supported | CLI Command |
 |----------|-----------|-------------|
+| Get songs | ✅ | `sc collaborator songs <uuid>` |
 | Get collaborator by UUID | ✅ | `sc collaborator get <uuid>` |
 | Get collaborator by IPI | ✅ | `sc collaborator get <ipi>` |
 | Get collaborator by platform ID | ✅ | `sc collaborator get <url>` |
 | Get IDs / platform identifiers | ✅ | `sc collaborator identifiers <uuid>` |
+
+### Label
+
+| Endpoint | Supported | CLI Command |
+|----------|-----------|-------------|
+| Get label metadata | ✅ | `sc label get <uuid>` |
+| Get IDs | ✅ | `sc label identifiers <uuid>` |
+
+### Usage & quotas
+
+| Endpoint | Supported | CLI Command |
+|----------|-----------|-------------|
+| Monitor API quota and rate limits | ✅ | `sc quota` |
 
 ### Not Yet Supported
 
@@ -436,6 +493,10 @@ These resource groups have no CLI support yet:
 
 | Resource | Endpoints |
 |----------|-----------|
+| Distributor | UPC prefixes and UPC management |
+| Data feed | Feed discovery and subscription management |
+| Favorite | Favorite artist management |
+| City | Festivals, venues, concerts |
 | Radio | Get radios, live feed, IDs (~4) |
 | Festival | Get festivals, metadata, by platform, editions (~7) |
 | Venue | Get venues, metadata, by platform, concerts (~7) |

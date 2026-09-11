@@ -6,11 +6,14 @@ mod identifier;
 mod models;
 mod output;
 mod paginator;
+#[cfg(test)]
+mod test_support;
 
 use clap::{CommandFactory, Parser};
 use cli::{
     AlbumCommands, ArtistCommands, AuthCommands, ChartCommands, Cli, CollaboratorCommands,
-    Commands, PlaylistCommands, PublisherCommands, SearchCommands, SongCommands, WorkCommands,
+    Commands, LabelCommands, PlaylistCommands, PublisherCommands, SearchCommands, SongCommands,
+    WorkCommands,
 };
 use client::SoundchartsClient;
 use config::resolve_credentials;
@@ -42,6 +45,19 @@ async fn main() {
         Commands::Doctor => {
             commands::doctor::run(cli.app_id.as_deref(), cli.api_key.as_deref()).await
         }
+        Commands::Quota => {
+            let client = require_client(&cli);
+            commands::quota::run(&client, &format).await;
+        }
+        Commands::Label { command } => {
+            let client = require_client(&cli);
+            match command {
+                LabelCommands::Get { uuid } => commands::label::get(&client, uuid, &format).await,
+                LabelCommands::Identifiers { uuid, pagination } => {
+                    commands::label::identifiers(&client, uuid, pagination, &format).await
+                }
+            }
+        }
         Commands::Update => commands::update::run().await,
         Commands::Completions { shell } => {
             clap_complete::generate(*shell, &mut Cli::command(), "sc", &mut std::io::stdout());
@@ -49,6 +65,15 @@ async fn main() {
         Commands::Search { command } => {
             let client = require_client(&cli);
             match command {
+                SearchCommands::Collaborator { query, pagination } => {
+                    commands::search::collaborator(&client, query, pagination, &format).await
+                }
+                SearchCommands::Album { query, pagination } => {
+                    commands::search::album(&client, query, pagination, &format).await
+                }
+                SearchCommands::Label { query, pagination } => {
+                    commands::search::label(&client, query, pagination, &format).await
+                }
                 SearchCommands::Artist { query, pagination } => {
                     commands::search::artist(&client, query, pagination, &format).await
                 }
@@ -66,11 +91,14 @@ async fn main() {
                 ArtistCommands::Get {
                     identifier,
                     platform,
+                } => commands::artist::get(&client, identifier, platform.as_deref(), &format).await,
+                ArtistCommands::Songs {
+                    uuid,
+                    main_performer,
+                    pagination,
                 } => {
-                    commands::artist::get(&client, identifier, platform.as_deref(), &format).await
-                }
-                ArtistCommands::Songs { uuid, pagination } => {
-                    commands::artist::songs(&client, uuid, pagination, &format).await
+                    commands::artist::songs(&client, uuid, *main_performer, pagination, &format)
+                        .await
                 }
                 ArtistCommands::Albums { uuid, pagination } => {
                     commands::artist::albums(&client, uuid, pagination, &format).await
@@ -108,6 +136,26 @@ async fn main() {
         Commands::Song { command } => {
             let client = require_client(&cli);
             match command {
+                SongCommands::Stats { uuid, period } => {
+                    commands::song::stats(&client, uuid, *period, &format).await
+                }
+                SongCommands::Score {
+                    uuid,
+                    history,
+                    pagination,
+                } => commands::song::score(&client, uuid, history, pagination, &format).await,
+                SongCommands::Streaming {
+                    uuid,
+                    platform,
+                    history,
+                    pagination,
+                } => {
+                    commands::song::streaming(&client, uuid, platform, history, pagination, &format)
+                        .await
+                }
+                SongCommands::Related { uuid } => {
+                    commands::song::related(&client, uuid, &format).await
+                }
                 SongCommands::Get {
                     identifier,
                     platform,
@@ -196,14 +244,17 @@ async fn main() {
                     commands::publisher::get(&client, identifier, platform.as_deref(), &format)
                         .await
                 }
-                PublisherCommands::Identifiers { uuid } => {
-                    commands::publisher::identifiers(&client, uuid, &format).await
+                PublisherCommands::Identifiers { uuid, pagination } => {
+                    commands::publisher::identifiers(&client, uuid, pagination, &format).await
                 }
             }
         }
         Commands::Collaborator { command } => {
             let client = require_client(&cli);
             match command {
+                CollaboratorCommands::Songs { uuid, pagination } => {
+                    commands::collaborator::songs(&client, uuid, pagination, &format).await
+                }
                 CollaboratorCommands::Get {
                     identifier,
                     platform,
@@ -211,8 +262,8 @@ async fn main() {
                     commands::collaborator::get(&client, identifier, platform.as_deref(), &format)
                         .await
                 }
-                CollaboratorCommands::Identifiers { uuid } => {
-                    commands::collaborator::identifiers(&client, uuid, &format).await
+                CollaboratorCommands::Identifiers { uuid, pagination } => {
+                    commands::collaborator::identifiers(&client, uuid, pagination, &format).await
                 }
             }
         }
@@ -223,8 +274,8 @@ async fn main() {
                     identifier,
                     platform,
                 } => commands::work::get(&client, identifier, platform.as_deref(), &format).await,
-                WorkCommands::Identifiers { uuid } => {
-                    commands::work::identifiers(&client, uuid, &format).await
+                WorkCommands::Identifiers { uuid, pagination } => {
+                    commands::work::identifiers(&client, uuid, pagination, &format).await
                 }
                 WorkCommands::Recordings { uuid, pagination } => {
                     commands::work::recordings(&client, uuid, pagination, &format).await

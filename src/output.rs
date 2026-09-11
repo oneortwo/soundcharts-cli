@@ -89,3 +89,56 @@ pub fn print_kv(pairs: &[(&str, String)]) {
         );
     }
 }
+
+/// Keep raw records in JSON; render selected fields for terminal and CSV output.
+pub fn print_records(items: &[Value], fields: &[&str], format: &OutputFormat) {
+    match format {
+        OutputFormat::Json => print_json_array(items),
+        OutputFormat::Csv => print_csv(fields, record_rows(items, fields)),
+        OutputFormat::Table => print_table(fields, record_rows(items, fields)),
+    }
+}
+
+fn record_rows(items: &[Value], fields: &[&str]) -> Vec<Vec<String>> {
+    items
+        .iter()
+        .map(|item| {
+            fields
+                .iter()
+                .map(|field| match item.get(field) {
+                    None | Some(Value::Null) => String::new(),
+                    Some(Value::String(text)) => text.clone(),
+                    Some(value) => value.to_string(),
+                })
+                .collect()
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn record_rows_preserve_false_zero_nested_data_and_missing_fields() {
+        let items = [
+            json!({"name":"A, B", "verified":false,"value":0,"roles":["writer"],"countryCode":null}),
+        ];
+        assert_eq!(
+            record_rows(
+                &items,
+                &[
+                    "name",
+                    "verified",
+                    "value",
+                    "roles",
+                    "countryCode",
+                    "missing"
+                ]
+            ),
+            vec![vec!["A, B", "false", "0", "[\"writer\"]", "", ""]]
+        );
+        assert!(record_rows(&[], &["name"]).is_empty());
+    }
+}

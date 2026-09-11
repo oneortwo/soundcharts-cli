@@ -72,6 +72,10 @@ pub async fn paginate(
             }
         }
 
+        if args.no_paginate {
+            break;
+        }
+
         let has_next = body
             .pointer("/page/next")
             .map(|n| !n.is_null())
@@ -95,5 +99,50 @@ pub async fn paginate(
         items: all_items,
         total,
         quota_remaining,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::{pagination, server};
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn no_paginate_stops_even_when_all_is_set() {
+        let (client, requests) = server(vec![
+            json!({"items":[{"uuid":"one"}],"page":{"next":"next"}}),
+        ])
+        .await;
+        let args = PaginationArgs {
+            no_paginate: true,
+            ..pagination()
+        };
+        let result = paginate(&client, "/items", &[], &args).await;
+        assert_eq!(result.items.len(), 1);
+        assert_eq!(requests.await.unwrap().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn limit_truncates_and_empty_collections_are_valid() {
+        let (client, requests) = server(vec![
+            json!({"items":[1,2,3],"page":{"next":"next"}}),
+            json!({"items":[],"page":{"next":null}}),
+        ])
+        .await;
+        let args = PaginationArgs {
+            all: false,
+            limit: Some(2),
+            ..pagination()
+        };
+        assert_eq!(
+            paginate(&client, "/items", &[], &args).await.items,
+            vec![json!(1), json!(2)]
+        );
+        assert!(paginate(&client, "/empty", &[], &pagination())
+            .await
+            .items
+            .is_empty());
+        assert_eq!(requests.await.unwrap().len(), 2);
     }
 }

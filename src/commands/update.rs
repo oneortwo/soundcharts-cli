@@ -11,7 +11,11 @@ const ARCHIVE_EXT: &str = "zip";
 const ARCHIVE_EXT: &str = "tar.gz";
 
 fn binary_name() -> &'static str {
-    if cfg!(windows) { "sc.exe" } else { "sc" }
+    if cfg!(windows) {
+        "sc.exe"
+    } else {
+        "sc"
+    }
 }
 
 pub async fn run() {
